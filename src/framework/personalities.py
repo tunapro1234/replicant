@@ -112,26 +112,38 @@ DEFAULT_INSTRUCTION = (
 
 def _build_description(levels):
     """
-    Build a natural personality description from domain levels.
+    Build a BFI-2-Expanded personality description from domain levels.
+
+    Uses the validated BFI-2-Expanded format (Designing AI-Agents with
+    Personalities, 2024): instead of "strongly agree/disagree" Likert
+    labels, response options become full expanded sentences with degree.
 
     Args:
         levels: dict of {domain: "high"|"low"|"average"}
     Returns:
         str: narrative personality description
     """
-    lines = ["I am someone who:"]
+    # Degree modifiers for expanded format
+    STRONG = {"high": "very much", "low": "very much"}
+    MODERATE = {"high": "somewhat", "low": "somewhat"}
+
+    lines = []
 
     for domain, level in levels.items():
         items = BFI2_ITEMS[domain]
         for facet, item_pair in items.items():
-            positive_item, _ = item_pair[0]
-            negative_item, _ = item_pair[1]
+            positive_text, _ = item_pair[0]  # e.g. "is outgoing, sociable"
+            negative_text, _ = item_pair[1]  # e.g. "tends to be quiet"
 
             if level == "high":
-                lines.append(f"- {positive_item}")
+                # Use the positive pole with strong agreement
+                lines.append(f"I am someone who {positive_text}.")
             elif level == "low":
-                lines.append(f"- {negative_item}")
-            # "average" — skip, don't include extreme descriptors
+                # Use the reverse pole with strong agreement
+                lines.append(f"I am someone who {negative_text}.")
+            # "average" — include both poles with moderate language
+            elif level == "average":
+                lines.append(f"I am someone who sometimes {positive_text}, but not always.")
 
     return "\n".join(lines)
 
