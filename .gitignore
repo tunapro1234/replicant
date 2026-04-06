@@ -1,3 +1,10 @@
 .venv/
-checkpoint_default.json
-results_*.csv
+__pycache__/
+*.pyc
+.env
+results/*.csv
+results/*.json
+checkpoints/
+*.egg-info/
+dist/
+build/
