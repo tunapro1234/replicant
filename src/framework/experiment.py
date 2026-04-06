@@ -3,13 +3,16 @@ BehavioralExperiment — Multi-part experiment runner built on EDSL.
 
 Adds on top of EDSL:
 - Named parts that run sequentially with per-part validation
+- Automatic retry for NaN rows (re-runs failed agent/scenario combinations)
 - Multi-model comparison (same experiment across N models)
-- Structured results collection per part
 """
 
 import time
 
-from edsl import AgentList, Model, ScenarioList
+from edsl import Agent, AgentList, Model, ScenarioList, Scenario, Survey
+
+
+MAX_RETRIES = 3
 
 
 class BehavioralExperiment:
@@ -19,7 +22,6 @@ class BehavioralExperiment:
         exp.add_part("baseline", survey, scenarios)
         exp.add_part("voting", survey)
         all_results = exp.run(agents)
-        all_results["baseline"].select("answer.contribution").print()
     """
 
     def __init__(self, name, model=None):
@@ -42,6 +44,67 @@ class BehavioralExperiment:
             "description": description,
         })
 
+    def _run_part(self, part, agents):
+        """Run a single part with automatic retry for NaN rows."""
+        job = part["survey"].by(agents).by(self.model)
+        if part["scenarios"] is not None:
+            scenarios = part["scenarios"]
+            if isinstance(scenarios, list):
+                scenarios = ScenarioList(scenarios)
+            job = job.by(scenarios)
+
+        edsl_results = job.run()
+        df = edsl_results.to_pandas()
+
+        ans_cols = [c for c in df.columns if c.startswith("answer.")]
+        if not ans_cols:
+            return df
+
+        # Check for NaN rows and retry them
+        for attempt in range(MAX_RETRIES):
+            nan_mask = df[ans_cols].isna().all(axis=1)
+            nan_count = nan_mask.sum()
+            if nan_count == 0:
+                break
+
+            print(f"  Retrying {nan_count} NaN rows (attempt {attempt + 1}/{MAX_RETRIES})...", flush=True)
+
+            # Identify which agent/scenario combos failed
+            nan_rows = df[nan_mask]
+            agent_col = "agent.agent_name"
+            scenario_cols = [c for c in df.columns if c.startswith("scenario.") and not c.endswith("_index")]
+
+            for _, row in nan_rows.iterrows():
+                # Rebuild agent
+                retry_agent = AgentList([Agent(name=row[agent_col])])
+
+                # Rebuild scenario if applicable
+                retry_scenarios = None
+                if scenario_cols:
+                    sc_dict = {c.replace("scenario.", ""): row[c] for c in scenario_cols}
+                    retry_scenarios = ScenarioList([Scenario(sc_dict)])
+
+                retry_job = part["survey"].by(retry_agent).by(self.model)
+                if retry_scenarios is not None:
+                    retry_job = retry_job.by(retry_scenarios)
+
+                try:
+                    retry_result = retry_job.run()
+                    retry_df = retry_result.to_pandas()
+
+                    # Check if retry succeeded
+                    retry_ans = [c for c in retry_df.columns if c.startswith("answer.")]
+                    if retry_ans and not retry_df[retry_ans].isna().all(axis=1).iloc[0]:
+                        # Patch the answer columns back into the main df
+                        idx = row.name
+                        for c in retry_ans:
+                            if c in df.columns:
+                                df.at[idx, c] = retry_df[c].iloc[0]
+                except Exception:
+                    pass  # retry failed, move on
+
+        return df
+
     def run(self, agents):
         """Run all parts sequentially. Returns dict of {part_name: DataFrame}."""
         if isinstance(agents, list):
@@ -61,23 +124,14 @@ class BehavioralExperiment:
             print(f"[{idx}/{total}] {label}...", flush=True)
 
             t0 = time.time()
+            df = self._run_part(part, agents)
 
-            job = part["survey"].by(agents).by(self.model)
-            if part["scenarios"] is not None:
-                scenarios = part["scenarios"]
-                if isinstance(scenarios, list):
-                    scenarios = ScenarioList(scenarios)
-                job = job.by(scenarios)
-
-            edsl_results = job.run()
-            df = edsl_results.to_pandas()
-
-            # Validate
+            # Final validation
             ans_cols = [c for c in df.columns if c.startswith("answer.")]
             if ans_cols:
-                nan_pct = df[ans_cols].isna().all(axis=1).mean()
-                if nan_pct > 0.5:
-                    print(f"  WARNING: {nan_pct:.0%} NaN!", flush=True)
+                nan_count = df[ans_cols].isna().all(axis=1).sum()
+                if nan_count > 0:
+                    print(f"  WARNING: {nan_count} NaN rows remain after retries", flush=True)
                 else:
                     print(f"  OK ({len(df)} rows)", flush=True)
 
