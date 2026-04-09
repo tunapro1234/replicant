@@ -1,0 +1,10 @@
+services:
+  otree:
+    build: tests/otree_server
+    ports:
+      - "8000:8000"
+    environment:
+      - OTREE_ADMIN_PASSWORD=admin
+      - OTREE_REST_KEY=test-rest-key
+      - OTREE_AUTH_LEVEL=DEMO
+      - OTREE_PRODUCTION=0
