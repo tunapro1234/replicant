@@ -213,7 +213,14 @@ Paradoxically, default agents unanimously voted to allow punishment of low contr
 
 \subsection{Personality Agents: Human-Like Variance}
 
-Personality-endowed agents showed dramatically different behavior across all four parts of the experiment. Baseline contribution averaged 13.0 tokens ($SD = 6.2$), with contributions spanning the full 0--20 range. This variance---entirely absent in the default condition---reflects the diversity of personality profiles drawn from population norms.
+Personality-endowed agents showed dramatically different behavior across all four parts of the experiment. Baseline contribution averaged 13.0 tokens ($SD = 6.2$), with contributions spanning the full 0--20 range (Figure~\ref{fig:distribution}). This variance---entirely absent in the default condition---reflects the diversity of personality profiles drawn from population norms.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/fig2_baseline_distribution.pdf}
+\caption{Distribution of baseline contributions. Default agents cluster at 0 (Nash equilibrium); personality agents show a right-skewed distribution with mean above the human baseline.}
+\label{fig:distribution}
+\end{figure}
 
 \begin{table}[H]
 \centering
@@ -253,7 +260,14 @@ Metric & Default & Personality & Paper \\
 
 \subsection{Regime Effects}
 
-Personality agents showed clear sensitivity to punishment regimes, and the ordering of contributions across regimes is consistent with rational expectations (Figure~\ref{tab:results}):
+Figure~\ref{fig:regimes} illustrates the contribution differences across conditions and regimes. Personality agents showed clear sensitivity to punishment regimes, and the ordering of contributions is consistent with rational expectations:
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig1_regime_contributions.pdf}
+\caption{Mean contribution by punishment regime and condition. Error bars show standard deviations. Dashed line indicates the approximate human baseline from \citet{ertan2009who}.}
+\label{fig:regimes}
+\end{figure}
 
 \begin{itemize}
   \item \textbf{Unrestricted punishment} ($M = 16.0$, $SD = 7.1$): Highest contributions, as agents anticipate that free-riding may be punished by anyone.
@@ -267,7 +281,31 @@ The punish-high-only result is noteworthy: it demonstrates that personality agen
 
 Personality agents punished sparingly but appropriately. No punishment was directed at fully cooperative groups ($M = 0.00$), confirming that agents distinguish between deserving and undeserving targets. Punishment increased monotonically with the presence of free-riders: mixed groups ($M = 0.22$, 8\% of agents punished) and single free-rider groups ($M = 0.40$, 10\% punished).
 
-The low overall punishment rate is notable. While personality agents correctly identify free-riders as targets when they do punish, the majority (51\%) choose not to punish anyone---even in groups with clear free-riders. This reluctance stands in contrast to human behavior, where a substantial fraction of participants engage in costly punishment \citep{fehr2002altruistic}.
+The low overall punishment rate is notable. While personality agents correctly identify free-riders as targets when they do punish, the majority (51\%) choose not to punish anyone---even in groups with clear free-riders (Figure~\ref{fig:targets}). This reluctance stands in contrast to human behavior, where a substantial fraction of participants engage in costly punishment \citep{fehr2002altruistic}.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.6\textwidth]{figures/fig3_punishment_targets.pdf}
+\caption{Punishment target distribution by condition. Default agents always identify a target but never spend tokens; personality agents mostly choose not to punish.}
+\label{fig:targets}
+\end{figure}
+
+\subsection{Personality Trait Effects on Behavior}
+
+A key advantage of the personality condition is that we can examine how individual Big Five traits relate to economic behavior. Figure~\ref{fig:personality} shows the relationship between each trait score and baseline contribution.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=\textwidth]{figures/fig5_personality_correlations.pdf}
+\caption{Personality trait scores vs.\ baseline contribution for personality agents ($N = 50$). Lines show linear fits. Agreeableness shows the strongest positive correlation; neuroticism shows the strongest negative correlation.}
+\label{fig:personality}
+\end{figure}
+
+Agreeableness showed the strongest positive correlation with contribution ($r = +0.54$), consistent with the psychological literature linking agreeableness to prosocial behavior. Agents with above-median agreeableness contributed 14.3 tokens on average, compared to 11.7 for below-median agents. Neuroticism showed the strongest negative correlation ($r = -0.43$): more neurotic agents contributed less (11.8 vs.\ 14.2). Extraversion was moderately positive ($r = +0.34$), while conscientiousness and openness showed weaker associations ($r = +0.12$ and $r = +0.11$).
+
+These correlations align with established findings in personality psychology. \citet{volk2012personality} found that agreeableness was the strongest predictor of cooperation in human public goods experiments, with neuroticism predicting lower contributions---precisely the pattern we observe in LLM agents.
+
+Personality also influenced institutional preferences. Among high-agreeableness agents, none voted to allow punishment of low contributors (0\%), while 28\% of low-agreeableness agents did. This is consistent with the trait's association with interpersonal harmony: agreeable individuals avoid endorsing punitive measures, even when directed at norm violators.
 
 \subsection{Comparison to the Original Paper}
 
