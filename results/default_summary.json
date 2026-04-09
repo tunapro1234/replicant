@@ -1,0 +1,48 @@
+{
+  "baseline_mean": 0.0,
+  "baseline_std": 0.0,
+  "vote_punish_low": 1.0,
+  "vote_punish_high": 0.0,
+  "regimes": {
+    "no_punishment": {
+      "mean": 0.0,
+      "std": 0.0
+    },
+    "punish_low_only": {
+      "mean": 0.0,
+      "std": 0.0
+    },
+    "punish_high_only": {
+      "mean": 0.0,
+      "std": 0.0
+    },
+    "unrestricted": {
+      "mean": 0.0,
+      "std": 0.0
+    }
+  },
+  "punishment": {
+    "all_cooperate": {
+      "mean": 0.0,
+      "std": 0.0,
+      "nonzero": 0,
+      "n": 150
+    },
+    "mixed": {
+      "mean": 0.0,
+      "std": 0.0,
+      "nonzero": 0,
+      "n": 150
+    },
+    "one_freerider": {
+      "mean": 0.0,
+      "std": 0.0,
+      "nonzero": 0,
+      "n": 150
+    }
+  },
+  "targets": {
+    "Lowest contributor": 300,
+    "Below-average contributors": 150
+  }
+}

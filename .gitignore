@@ -2,8 +2,9 @@
 __pycache__/
 *.pyc
 .env
-results/*.csv
-results/*.json
+# Keep experiment results, ignore old test artifacts
+results/results_*.csv
+results/checkpoint_*.json
 checkpoints/
 *.egg-info/
 dist/
