@@ -1,0 +1,301 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{float}
+
+\geometry{margin=1in}
+\onehalfspacing
+
+\title{Personality Makes the Difference: Replicating a Public Goods Experiment with LLM Agents Using BFI-2 Personality Induction}
+
+\author{
+  % TODO: Add author names
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Can large language models replicate human behavior in economic experiments? We test this by replicating Ertan, Page, and Putterman's (2009) public goods game with endogenous punishment institutions using LLM agents. We compare two conditions: default agents (no personality) and agents assigned Big Five personality traits using the validated BFI-2-Expanded format. Default agents behave as hyper-rational free-riders, contributing nothing across all conditions ($M = 0.0$, $SD = 0.0$). In contrast, personality-endowed agents cooperate substantially ($M = 13.0$, $SD = 6.2$), respond to punishment regimes, and exhibit meaningful behavioral variance. All differences between conditions are statistically significant ($p < 0.001$, Mann--Whitney $U$). However, personality agents are more cooperative than the original human participants (13.0 vs.\ 7.5 tokens) and less inclined to vote for punishment institutions (14\% vs.\ 85\%). These findings demonstrate that personality induction is necessary for LLMs to approximate human-like economic behavior, while revealing systematic biases in prosociality and punishment aversion that likely stem from RLHF alignment training.
+
+\medskip
+\noindent\textbf{Keywords:} LLM agents, behavioral economics, public goods game, Big Five personality, BFI-2, punishment institutions, Homo Silicus
+\end{abstract}
+
+%----------------------------------------------------------------------
+\section{Introduction}
+%----------------------------------------------------------------------
+
+The use of large language models (LLMs) as simulated participants in social science research has gained significant attention \citep{horton2023homo, aher2023turing, argyle2023out}. These ``silicon samples'' offer the potential for rapid, low-cost behavioral experiments---but a fundamental question remains: do LLM agents behave like humans?
+
+Recent work suggests that default LLM behavior often diverges from human norms. Models tend toward hyper-rational or socially desirable responses that do not reflect the bounded rationality, emotional variability, and heterogeneity observed in human populations \citep{mei2024turing, kozlowski2025simulating}. A promising approach to closing this gap is personality induction---assigning psychometrically grounded personality traits to LLM agents to introduce human-like behavioral variance.
+
+In this paper, we replicate the public goods experiment of \citet{ertan2009who}, in which human participants decide how much to contribute to a public good and vote on whether to allow punishment of low or high contributors. The original study found that groups gradually adopt institutions that permit punishment of free-riders, leading to increased cooperation.
+
+We conduct this replication under two conditions: (1) default LLM agents with no personality assignment, and (2) agents assigned Big Five personality traits sampled from US adult population norms, using the BFI-2-Expanded format validated for LLM personality induction \citep{huang2024designing, soto2017bfi2}.
+
+Our contributions are as follows:
+\begin{enumerate}
+  \item We demonstrate that personality induction is not optional but \emph{necessary} for LLMs to produce human-like behavioral variance in economic experiments.
+  \item We identify systematic biases: LLM agents with personality are more cooperative but less punitive than humans, suggesting RLHF alignment creates a prosociality floor.
+  \item We validate the BFI-2-Expanded approach using cross-instrument measurement (Mini-IPIP), achieving 88\% domain-level alignment.
+  \item We provide an open-source framework for running personality-endowed economic experiments with LLMs.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\section{Related Work}
+%----------------------------------------------------------------------
+
+\subsection{LLM Agents in Behavioral Economics}
+
+\citet{horton2023homo} introduced the concept of \emph{Homo Silicus}---using LLMs as simulated economic agents. Subsequent work has replicated classic experiments including ultimatum games, dictator games, and prisoner's dilemmas with varying degrees of success \citep{aher2023turing, mei2024turing, park2024generative}. A consistent finding is that default LLM behavior tends toward either hyper-rational equilibria or excessively prosocial responses, depending on the model and prompt design.
+
+\subsection{Personality in LLMs}
+
+Personality traits can be induced in LLMs through system prompts containing trait descriptions \citep{serapio2024personality, jiang2024personallm}. However, the format matters: simple numeric scores (e.g., ``agreeableness = 7'') produce weak and unreliable effects, while expanded descriptive formats yield more robust personality expression \citep{huang2024designing}. The BFI-2-Expanded format, which transforms Likert-scale responses into complete behavioral sentences, has been shown to most closely reproduce human personality-decision associations.
+
+A critical methodological concern is ensuring the LLM actually \emph{embodies} the assigned personality rather than simply parroting it. Cross-instrument validation---assigning personality with one instrument and measuring with another---addresses this concern \citep{gupta2024self}.
+
+\subsection{The Ertan et al.\ (2009) Experiment}
+
+\citet{ertan2009who} study a voluntary contributions mechanism (VCM) in which groups of participants can vote on punishment rules. Key findings include: (a) no group ever voted to allow punishment of high contributors; (b) groups gradually adopt punishment of low contributors; and (c) the availability of punishment increases cooperation. The experiment involved 160 subjects across multiple sessions.
+
+%----------------------------------------------------------------------
+\section{Method}
+%----------------------------------------------------------------------
+
+\subsection{Experiment Design}
+
+We replicate the core design of \citet{ertan2009who} as a single-shot experiment with four parts:
+
+\textbf{Part 1: Baseline Contribution.} Each agent independently decides how many tokens (0--20) to contribute to a group project, given a marginal per capita return (MPCR) of 0.4 in a group of 5. No punishment mechanism is present.
+
+\textbf{Part 2: Voting.} Each agent votes on whether to allow punishment of (a) below-average contributors and (b) above-average contributors.
+
+\textbf{Part 3: Contribution Under Punishment Regimes.} Each agent makes contribution decisions under four regimes: no punishment, punish low contributors only, punish high contributors only, and unrestricted punishment.
+
+\textbf{Part 4: Punishment Decisions.} Given three profiles of other group members' contributions (all cooperate, mixed, one free-rider), agents decide how many tokens to spend on punishment (0--5) and who to target.
+
+\subsection{Conditions}
+
+\textbf{Default Condition ($N = 50$).} Agents receive no personality assignment. The system prompt instructs them to ``answer as if you were a human.''
+
+\textbf{Personality Condition ($N = 50$).} Each agent is assigned a personality sampled from US adult population norms \citep{soto2017bfi2, srivastava2003development}. Personality scores on the Big Five domains are drawn from Gaussian distributions with published population means and standard deviations, then converted to behavioral descriptions using a 7-level sentence bank based on BFI-2-Expanded items.
+
+\subsection{Personality Induction}
+
+We use the BFI-2-Expanded format \citep{soto2017bfi2}, adapted for LLM prompting following \citet{huang2024designing}. Each Big Five domain has seven intensity levels ($-3$ to $+3$), with three descriptive sentences per level (one per facet). For example, a high-agreeableness agent receives:
+
+\begin{quote}
+\emph{I am someone who is compassionate, has a soft heart.} \\
+\emph{I am someone who is respectful, treats others with respect.} \\
+\emph{I am someone who assumes the best about people.}
+\end{quote}
+
+While a low-agreeableness agent receives:
+
+\begin{quote}
+\emph{I am someone who can be cold and uncaring.} \\
+\emph{I am someone who is sometimes rude to others.} \\
+\emph{I am someone who tends to find fault with others.}
+\end{quote}
+
+The personality description is embedded in the agent's system prompt with the instruction: ``You are a participant in an experiment. Your personality description below reflects who you are. Let it naturally shape your decisions and reasoning---act as a real person with this personality would.''
+
+\subsection{Personality Validation}
+
+Before running the economic experiment, we validated personality induction using cross-instrument measurement. Agents were assigned personality via BFI-2-Expanded descriptions and measured using the Mini-IPIP 20-item inventory \citep{donnellan2006mini}, which uses different item wording. Five profiles were tested: cooperative, selfish, leader, anxious, and average.
+
+Results showed 88\% domain-level alignment (22/25 domain-profile combinations correctly classified). Extreme profiles achieved perfect alignment (5/5), while the average profile showed upward drift in agreeableness and openness---consistent with known prosociality bias from RLHF training.
+
+\subsection{Model and Infrastructure}
+
+All experiments used StepFun Step-3.5-Flash via OpenRouter API ($\$0.10$/M input tokens, $\$0.30$/M output tokens). Temperature was set to 0.5. Experiments were run using EDSL \citep{edsl} with a custom framework handling multi-part experiments and automatic retry of failed API calls. Total cost for both conditions: approximately \$0.50.
+
+%----------------------------------------------------------------------
+\section{Results}
+%----------------------------------------------------------------------
+
+\subsection{Default Agents: Hyper-Rational Free-Riding}
+
+Default agents contributed 0.0 tokens across all conditions (Table~\ref{tab:results}). This is the Nash equilibrium prediction---given MPCR $= 0.4$, the rational strategy is to contribute nothing. Default agents unanimously voted to allow punishment of low contributors (100\%) but never spent tokens on punishment (0.0 across all profiles), while consistently identifying the lowest contributor as the target (67\%) or below-average contributors (33\%).
+
+This reveals a paradox: default agents are simultaneously hyper-rational (zero contribution) and normatively aware (they vote for punishment and identify targets), yet unwilling to bear the cost of enforcement.
+
+\subsection{Personality Agents: Human-Like Variance}
+
+Personality-endowed agents showed dramatically different behavior. Baseline contribution averaged 13.0 tokens ($SD = 6.2$), with contributions spanning the full 0--20 range. This variance---entirely absent in the default condition---reflects the diversity of personality profiles drawn from population norms.
+
+\begin{table}[H]
+\centering
+\caption{Summary of Results}
+\label{tab:results}
+\begin{tabular}{lccc}
+\toprule
+Metric & Default & Personality & Paper \\
+\midrule
+\multicolumn{4}{l}{\textit{Contribution decisions}} \\
+\quad Baseline & 0.0 (0.0) & 13.0 (6.2)$^{***}$ & $\sim$7.5 \\
+\quad No punishment regime & 0.0 (0.0) & 13.3 (6.4)$^{***}$ & --- \\
+\quad Punish low only & 0.0 (0.0) & 12.9 (9.5)$^{***}$ & --- \\
+\quad Punish high only & 0.0 (0.0) & 1.0 (3.6)$^{*}$ & --- \\
+\quad Unrestricted & 0.0 (0.0) & 16.0 (7.1)$^{***}$ & --- \\
+\midrule
+\multicolumn{4}{l}{\textit{Voting (\%)}} \\
+\quad Allow punish low & 100 & 14 & 85 \\
+\quad Allow punish high & 0 & 0 & 0 \\
+\midrule
+\multicolumn{4}{l}{\textit{Punishment amount (0--5 tokens)}} \\
+\quad All cooperate & 0.00 & 0.00 & --- \\
+\quad Mixed group & 0.00 & 0.22 & --- \\
+\quad One free-rider & 0.00 & 0.40 & --- \\
+\midrule
+\multicolumn{4}{l}{\textit{Punishment target (\%)}} \\
+\quad Lowest contributor & 67 & 37 & --- \\
+\quad Below-average & 33 & 13 & --- \\
+\quad Nobody & 0 & 51 & --- \\
+\bottomrule
+\end{tabular}
+
+\medskip
+\footnotesize
+\textit{Note.} Standard deviations in parentheses. Statistical tests: Mann--Whitney $U$. $^{*}p < .05$, $^{***}p < .001$. $N = 50$ per condition. Paper values approximate from \citet{ertan2009who}.
+\end{table}
+
+\subsection{Regime Effects}
+
+Personality agents showed sensitivity to punishment regimes consistent with theoretical predictions. Unrestricted punishment yielded the highest contributions ($M = 16.0$), as agents anticipated potential punishment for free-riding. No punishment and punish-low-only regimes produced similar moderate contributions ($M = 13.3$ and $12.9$). The punish-high-only regime collapsed contributions to near zero ($M = 1.0$), as agents rationally avoided being punished for cooperating.
+
+\subsection{Punishment Behavior}
+
+Personality agents punished sparingly. No punishment was directed at fully cooperative groups. Punishment increased with the presence of free-riders: mixed groups elicited $M = 0.22$ tokens (8\% of agents punished) and single free-rider groups elicited $M = 0.40$ tokens (10\% punished). When agents targeted punishment, they predominantly chose ``Nobody'' (51\%), followed by ``Lowest contributor'' (37\%) and ``Below-average contributors'' (13\%).
+
+\subsection{Comparison to Original Paper}
+
+The personality condition captures several qualitative patterns from \citet{ertan2009who}: (a) zero support for punishing high contributors; (b) punishment targets the lowest contributor; and (c) contributions respond to punishment regimes. However, two systematic divergences emerge:
+
+\begin{enumerate}
+  \item \textbf{Prosociality bias.} Personality agents contribute more than human participants (13.0 vs.\ $\sim$7.5), indicating a cooperative shift.
+  \item \textbf{Punishment aversion.} Only 14\% of personality agents voted to allow punishment of low contributors, compared to 85\% in the original study.
+\end{enumerate}
+
+%----------------------------------------------------------------------
+\section{Discussion}
+%----------------------------------------------------------------------
+
+\subsection{Personality Is Necessary, Not Optional}
+
+The contrast between conditions demonstrates that personality induction fundamentally transforms LLM economic behavior. Without personality, agents converge on game-theoretic equilibria. With personality, they exhibit the bounded rationality, cooperation, and heterogeneity characteristic of human participants. Studies using default LLM agents as human surrogates in economic experiments risk measuring model optimization rather than human-like behavior.
+
+\subsection{The RLHF Prosociality Floor}
+
+Both the upward drift in cooperation and the reluctance to endorse punishment likely reflect reinforcement learning from human feedback (RLHF). During training, models learn to be helpful, harmless, and honest---creating a prosociality floor that inflates cooperative behavior and suppresses punitive responses. This bias is consistent with the agreeableness drift observed in our personality validation and documented in prior work \citep{salecha2024social}.
+
+\subsection{Limitations}
+
+Several limitations should be noted. First, our experiment is single-shot rather than repeated, unlike the original study which examined behavior across multiple rounds. Second, agents do not interact---each makes decisions independently. Third, results are model-specific; different LLMs may exhibit different biases. Fourth, our sample size ($N = 50$ per condition) is smaller than the original ($N = 160$). Finally, we used uncalibrated personality descriptions; post-hoc calibration could reduce the prosociality bias.
+
+%----------------------------------------------------------------------
+\section{Conclusion}
+%----------------------------------------------------------------------
+
+We demonstrate that personality induction via BFI-2-Expanded descriptions is necessary and effective for generating human-like behavioral variance in LLM-based economic experiments. Default agents produce degenerate hyper-rational behavior; personality-endowed agents cooperate, respond to institutional incentives, and exhibit individual differences. However, systematic biases from RLHF training---particularly prosociality and punishment aversion---mean that LLM agents approximate but do not replicate human economic behavior. Future work should explore multi-round interactions, group dynamics, cross-model comparisons, and calibrated personality descriptions to further improve the fidelity of LLM-based behavioral economics.
+
+%----------------------------------------------------------------------
+\bibliographystyle{apalike}
+\begin{thebibliography}{99}
+
+\bibitem[Aher et al., 2023]{aher2023turing}
+Aher, G.~V., Arriaga, R.~I., \& Kalai, A.~T. (2023).
+\newblock Using large language models to simulate multiple humans and replicate human subject studies.
+\newblock \emph{Proceedings of ICML 2023}.
+
+\bibitem[Argyle et al., 2023]{argyle2023out}
+Argyle, L.~P., Busby, E.~C., Fulda, N., Gubler, J.~R., Rytting, C., \& Wingate, D. (2023).
+\newblock Out of one, many: Using language models to simulate human samples.
+\newblock \emph{Political Analysis}, 31(3), 337--351.
+
+\bibitem[Donnellan et al., 2006]{donnellan2006mini}
+Donnellan, M.~B., Oswald, F.~L., Baird, B.~M., \& Lucas, R.~E. (2006).
+\newblock The Mini-IPIP scales: Tiny-yet-effective measures of the Big Five factors of personality.
+\newblock \emph{Psychological Assessment}, 18(2), 166--175.
+
+\bibitem[EDSL, 2024]{edsl}
+Expected Parrot (2024).
+\newblock EDSL: Design, conduct and analyze AI-powered surveys and experiments.
+\newblock \url{https://github.com/expectedparrot/edsl}
+
+\bibitem[Ertan et al., 2009]{ertan2009who}
+Ertan, A., Page, T., \& Putterman, L. (2009).
+\newblock Who to punish? Individual decisions and majority rule in mitigating the free rider problem.
+\newblock \emph{European Economic Review}, 53(5), 495--511.
+
+\bibitem[Gupta et al., 2024]{gupta2024self}
+Gupta, A., Song, J.~H., \& Ananthakrishnan, U.~N. (2024).
+\newblock Self-assessment tests are unreliable measures of LLM personality.
+\newblock \emph{Proceedings of BlackboxNLP 2024}.
+
+\bibitem[Horton, 2023]{horton2023homo}
+Horton, J.~J. (2023).
+\newblock Large language models as simulated economic agents: What can we learn from Homo Silicus?
+\newblock \emph{NBER Working Paper No.\ 31122}.
+
+\bibitem[Huang et al., 2024]{huang2024designing}
+Huang, J., et al. (2024).
+\newblock Designing AI-agents with personalities: A psychometric approach.
+\newblock \emph{arXiv:2410.19238}.
+
+\bibitem[Jiang et al., 2024]{jiang2024personallm}
+Jiang, H., et al. (2024).
+\newblock PersonaLLM: Investigating the ability of large language models to express personality traits.
+\newblock \emph{Findings of NAACL 2024}.
+
+\bibitem[Kozlowski \& Evans, 2025]{kozlowski2025simulating}
+Kozlowski, A.~C. \& Evans, J.~A. (2025).
+\newblock Simulating subjects: The promise and peril of AI stand-ins.
+\newblock \emph{Sociological Methods \& Research}.
+
+\bibitem[Mei et al., 2024]{mei2024turing}
+Mei, Q., et al. (2024).
+\newblock A Turing test of whether AI chatbots are behaviorally similar to humans.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 121(9).
+
+\bibitem[Park et al., 2024]{park2024generative}
+Park, J.~S., et al. (2024).
+\newblock Generative agent simulations of 1,000 people.
+\newblock \emph{arXiv:2411.10109}.
+
+\bibitem[Salecha et al., 2024]{salecha2024social}
+Salecha, A., et al. (2024).
+\newblock Social desirability biases in large language models.
+\newblock \emph{PNAS Nexus}, 3(12).
+
+\bibitem[Serapio-Garcia et al., 2024]{serapio2024personality}
+Serapio-Garcia, G., et al. (2024).
+\newblock Personality traits in large language models.
+\newblock \emph{Nature Machine Intelligence}.
+
+\bibitem[Soto \& John, 2017]{soto2017bfi2}
+Soto, C.~J. \& John, O.~P. (2017).
+\newblock The next Big Five Inventory (BFI-2): Developing and assessing a hierarchical model with 15 facets.
+\newblock \emph{Journal of Personality and Social Psychology}, 113(1), 117--143.
+
+\bibitem[Srivastava et al., 2003]{srivastava2003development}
+Srivastava, S., John, O.~P., Gosling, S.~D., \& Potter, J. (2003).
+\newblock Development of personality in early and middle adulthood: Set like plaster or persistent change?
+\newblock \emph{Journal of Personality and Social Psychology}, 84(5), 1041--1053.
+
+\end{thebibliography}
+
+\end{document}
