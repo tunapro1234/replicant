@@ -68,6 +68,7 @@ class OTreeClient:
             form_data['csrfmiddlewaretoken'] = page.csrf_token
         form_data.update(data)
 
+        # oTree forms POST to the current page URL (action is often empty)
         url = page.form_action or page.url
         resp = self.http.post(url, data=form_data, allow_redirects=True)
         resp.raise_for_status()
@@ -126,10 +127,11 @@ class OTreeClient:
 
 def _create_via_rest_api(server_url: str, session_config: str,
                          n_participants: int, rest_key: str | None) -> list[str]:
-    headers = {}
+    headers = {'Content-Type': 'application/json'}
     if rest_key:
         headers['otree-rest-key'] = rest_key
 
+    # Step 1: Create session
     resp = requests.post(
         f'{server_url}/api/sessions',
         json={
@@ -139,10 +141,19 @@ def _create_via_rest_api(server_url: str, session_config: str,
         headers=headers,
     )
     resp.raise_for_status()
+    session_code = resp.json()['code']
+
+    # Step 2: Fetch participant codes
+    resp = requests.post(
+        f'{server_url}/api/get_session/{session_code}',
+        json={},
+        headers=headers,
+    )
+    resp.raise_for_status()
 
     return [
         f"{server_url}/InitializeParticipant/{p['code']}"
-        for p in resp.json()
+        for p in resp.json()['participants']
     ]
 
 
@@ -326,6 +337,24 @@ def _extract_form_fields(html: str) -> list[FormField]:
     for name, choices in radio_groups.items():
         fields.append(FormField(
             name=name, input_type='radio',
+            label=labels.get(name, ''),
+            choices=choices,
+        ))
+
+    # <button name="x" value="y"> — oTree uses these as choice buttons
+    button_groups: dict[str, list[tuple[str, str]]] = {}
+    for m in re.finditer(
+        r'<button\b[^>]+name=["\'](\w+)["\'][^>]+value=["\']([^"\']*)["\'][^>]*>(.*?)</button>',
+        html, re.DOTALL,
+    ):
+        name, value, inner = m.group(1), m.group(2), m.group(3)
+        display = re.sub(r'<[^>]+>', '', inner).strip()
+        if name not in button_groups:
+            button_groups[name] = []
+        button_groups[name].append((value, display or value))
+    for name, choices in button_groups.items():
+        fields.append(FormField(
+            name=name, input_type='button',
             label=labels.get(name, ''),
             choices=choices,
         ))
