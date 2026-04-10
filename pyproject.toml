@@ -1,11 +1,37 @@
 [project]
-name = "behave-lab"
-version = "0.1.0"
-description = "LLM-based replication of behavioral economics experiments"
+name = "replicant"
+version = "0.2.0"
+description = "LLM-based replication framework for behavioral economics experiments"
 requires-python = ">=3.10"
+authors = [
+    {name = "Sabri Tuna Çakar"},
+]
+keywords = [
+    "behavioral economics",
+    "LLM agents",
+    "Big Five personality",
+    "BFI-2",
+    "experimental economics",
+    "oTree",
+    "Homo Silicus",
+]
 dependencies = [
     "edsl>=1.0",
+    "requests>=2.31",
+    "httpx>=0.24",
 ]
 
 [project.optional-dependencies]
-analysis = ["pandas>=2.0", "matplotlib>=3.7"]
+analysis = ["pandas>=2.0", "matplotlib>=3.7", "scipy>=1.10"]
+otree = ["otree>=6.0"]
+
+[project.scripts]
+replicant-otree = "replicant.otree.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["replicant*", "papers*"]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"

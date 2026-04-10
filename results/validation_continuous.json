@@ -1,0 +1,659 @@
+{
+  "model": "stepfun/step-3.5-flash",
+  "n": 20,
+  "seed": 42,
+  "paired_data": [
+    {
+      "agent": "agent_1",
+      "domain": "extraversion",
+      "assigned": 3.1919322528165535,
+      "measured": 3.75
+    },
+    {
+      "agent": "agent_1",
+      "domain": "agreeableness",
+      "assigned": 3.6962578398010884,
+      "measured": 4.5
+    },
+    {
+      "agent": "agent_1",
+      "domain": "conscientiousness",
+      "assigned": 3.6276446899810195,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_1",
+      "domain": "neuroticism",
+      "assigned": 3.326487793824147,
+      "measured": 3.25
+    },
+    {
+      "agent": "agent_1",
+      "domain": "openness",
+      "assigned": 3.5170676155411233,
+      "measured": 4.5
+    },
+    {
+      "agent": "agent_2",
+      "domain": "extraversion",
+      "assigned": 2.1769849392442815,
+      "measured": 1.0
+    },
+    {
+      "agent": "agent_2",
+      "domain": "agreeableness",
+      "assigned": 3.999391006440629,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_2",
+      "domain": "conscientiousness",
+      "assigned": 3.5262306389768407,
+      "measured": 3.75
+    },
+    {
+      "agent": "agent_2",
+      "domain": "neuroticism",
+      "assigned": 2.6372809868911036,
+      "measured": 1.25
+    },
+    {
+      "agent": "agent_2",
+      "domain": "openness",
+      "assigned": 3.675325111355556,
+      "measured": 4.5
+    },
+    {
+      "agent": "agent_3",
+      "domain": "extraversion",
+      "assigned": 3.4742233026800404,
+      "measured": 3.5
+    },
+    {
+      "agent": "agent_3",
+      "domain": "agreeableness",
+      "assigned": 4.498135211959486,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_3",
+      "domain": "conscientiousness",
+      "assigned": 4.126813729419135,
+      "measured": 4.25
+    },
+    {
+      "agent": "agent_3",
+      "domain": "neuroticism",
+      "assigned": 2.882880383082874,
+      "measured": 2.25
+    },
+    {
+      "agent": "agent_3",
+      "domain": "openness",
+      "assigned": 3.120090958475867,
+      "measured": 3.0
+    },
+    {
+      "agent": "agent_4",
+      "domain": "extraversion",
+      "assigned": 2.5390032243842118,
+      "measured": 2.0
+    },
+    {
+      "agent": "agent_4",
+      "domain": "agreeableness",
+      "assigned": 3.947805317126721,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_4",
+      "domain": "conscientiousness",
+      "assigned": 4.552202537682631,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_4",
+      "domain": "neuroticism",
+      "assigned": 2.831242647927538,
+      "measured": 1.75
+    },
+    {
+      "agent": "agent_4",
+      "domain": "openness",
+      "assigned": 3.5308898590489903,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_5",
+      "domain": "extraversion",
+      "assigned": 3.6988321653006517,
+      "measured": 4.0
+    },
+    {
+      "agent": "agent_5",
+      "domain": "agreeableness",
+      "assigned": 2.927872821194793,
+      "measured": 3.75
+    },
+    {
+      "agent": "agent_5",
+      "domain": "conscientiousness",
+      "assigned": 3.497019743856036,
+      "measured": 4.25
+    },
+    {
+      "agent": "agent_5",
+      "domain": "neuroticism",
+      "assigned": 3.1677718994451434,
+      "measured": 3.75
+    },
+    {
+      "agent": "agent_5",
+      "domain": "openness",
+      "assigned": 4.16771285049664,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_6",
+      "domain": "extraversion",
+      "assigned": 3.1195277455086483,
+      "measured": 3.5
+    },
+    {
+      "agent": "agent_6",
+      "domain": "agreeableness",
+      "assigned": 4.025959915212746,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_6",
+      "domain": "conscientiousness",
+      "assigned": 3.8613387420634697,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_6",
+      "domain": "neuroticism",
+      "assigned": 3.3867451065277314,
+      "measured": 3.0
+    },
+    {
+      "agent": "agent_6",
+      "domain": "openness",
+      "assigned": 2.8764055607386876,
+      "measured": 3.0
+    },
+    {
+      "agent": "agent_7",
+      "domain": "extraversion",
+      "assigned": 3.726188015689039,
+      "measured": 4.5
+    },
+    {
+      "agent": "agent_7",
+      "domain": "agreeableness",
+      "assigned": 2.891287764964916,
+      "measured": 3.5
+    },
+    {
+      "agent": "agent_7",
+      "domain": "conscientiousness",
+      "assigned": 1.9970354755577464,
+      "measured": 1.25
+    },
+    {
+      "agent": "agent_7",
+      "domain": "neuroticism",
+      "assigned": 2.344831953850373,
+      "measured": 1.0
+    },
+    {
+      "agent": "agent_7",
+      "domain": "openness",
+      "assigned": 3.0047234698751035,
+      "measured": 3.5
+    },
+    {
+      "agent": "agent_8",
+      "domain": "extraversion",
+      "assigned": 3.9570091822923046,
+      "measured": 4.5
+    },
+    {
+      "agent": "agent_8",
+      "domain": "agreeableness",
+      "assigned": 4.198559539767737,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_8",
+      "domain": "conscientiousness",
+      "assigned": 2.9076014181577983,
+      "measured": 3.5
+    },
+    {
+      "agent": "agent_8",
+      "domain": "neuroticism",
+      "assigned": 3.435521067511,
+      "measured": 3.5
+    },
+    {
+      "agent": "agent_8",
+      "domain": "openness",
+      "assigned": 2.948568164242473,
+      "measured": 3.5
+    },
+    {
+      "agent": "agent_9",
+      "domain": "extraversion",
+      "assigned": 3.2353171152477866,
+      "measured": 3.75
+    },
+    {
+      "agent": "agent_9",
+      "domain": "agreeableness",
+      "assigned": 3.6236601332260805,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_9",
+      "domain": "conscientiousness",
+      "assigned": 3.774372907349599,
+      "measured": 4.5
+    },
+    {
+      "agent": "agent_9",
+      "domain": "neuroticism",
+      "assigned": 3.413977233657825,
+      "measured": 2.75
+    },
+    {
+      "agent": "agent_9",
+      "domain": "openness",
+      "assigned": 4.014968964015089,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_10",
+      "domain": "extraversion",
+      "assigned": 3.5624138264019063,
+      "measured": 4.0
+    },
+    {
+      "agent": "agent_10",
+      "domain": "agreeableness",
+      "assigned": 4.189968858683779,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_10",
+      "domain": "conscientiousness",
+      "assigned": 4.011019824472577,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_10",
+      "domain": "neuroticism",
+      "assigned": 2.3297609010853,
+      "measured": 1.0
+    },
+    {
+      "agent": "agent_10",
+      "domain": "openness",
+      "assigned": 3.1337087890192246,
+      "measured": 3.5
+    },
+    {
+      "agent": "agent_11",
+      "domain": "extraversion",
+      "assigned": 2.9475237943979895,
+      "measured": 2.0
+    },
+    {
+      "agent": "agent_11",
+      "domain": "agreeableness",
+      "assigned": 4.099595840286069,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_11",
+      "domain": "conscientiousness",
+      "assigned": 3.5374248788517004,
+      "measured": 3.5
+    },
+    {
+      "agent": "agent_11",
+      "domain": "neuroticism",
+      "assigned": 4.551815666860411,
+      "measured": 4.25
+    },
+    {
+      "agent": "agent_11",
+      "domain": "openness",
+      "assigned": 3.067459847578779,
+      "measured": 3.75
+    },
+    {
+      "agent": "agent_12",
+      "domain": "extraversion",
+      "assigned": 2.4758440500733814,
+      "measured": 2.0
+    },
+    {
+      "agent": "agent_12",
+      "domain": "agreeableness",
+      "assigned": 4.261084109281818,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_12",
+      "domain": "conscientiousness",
+      "assigned": 4.624202487873253,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_12",
+      "domain": "neuroticism",
+      "assigned": 3.179269518129445,
+      "measured": 2.75
+    },
+    {
+      "agent": "agent_12",
+      "domain": "openness",
+      "assigned": 4.143281274878988,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_13",
+      "domain": "extraversion",
+      "assigned": 4.369758733081621,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_13",
+      "domain": "agreeableness",
+      "assigned": 3.7435835143902176,
+      "measured": 4.0
+    },
+    {
+      "agent": "agent_13",
+      "domain": "conscientiousness",
+      "assigned": 2.775076693459665,
+      "measured": 2.5
+    },
+    {
+      "agent": "agent_13",
+      "domain": "neuroticism",
+      "assigned": 2.4009425887609654,
+      "measured": 1.0
+    },
+    {
+      "agent": "agent_13",
+      "domain": "openness",
+      "assigned": 4.219382242255775,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_14",
+      "domain": "extraversion",
+      "assigned": 2.2172411954412836,
+      "measured": 1.0
+    },
+    {
+      "agent": "agent_14",
+      "domain": "agreeableness",
+      "assigned": 3.8201187924723565,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_14",
+      "domain": "conscientiousness",
+      "assigned": 3.86460428357234,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_14",
+      "domain": "neuroticism",
+      "assigned": 2.5633058763897467,
+      "measured": 1.25
+    },
+    {
+      "agent": "agent_14",
+      "domain": "openness",
+      "assigned": 4.0703607911392625,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_15",
+      "domain": "extraversion",
+      "assigned": 3.7355848061449244,
+      "measured": 4.25
+    },
+    {
+      "agent": "agent_15",
+      "domain": "agreeableness",
+      "assigned": 5.0,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_15",
+      "domain": "conscientiousness",
+      "assigned": 4.102979049052538,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_15",
+      "domain": "neuroticism",
+      "assigned": 2.342947406017703,
+      "measured": 1.0
+    },
+    {
+      "agent": "agent_15",
+      "domain": "openness",
+      "assigned": 3.2348315649828803,
+      "measured": 4.0
+    },
+    {
+      "agent": "agent_16",
+      "domain": "extraversion",
+      "assigned": 2.676314174068495,
+      "measured": 1.75
+    },
+    {
+      "agent": "agent_16",
+      "domain": "agreeableness",
+      "assigned": 4.371364135889492,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_16",
+      "domain": "conscientiousness",
+      "assigned": 3.3315586573710947,
+      "measured": 3.75
+    },
+    {
+      "agent": "agent_16",
+      "domain": "neuroticism",
+      "assigned": 2.7473044197245517,
+      "measured": 2.0
+    },
+    {
+      "agent": "agent_16",
+      "domain": "openness",
+      "assigned": 4.087046702538289,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_17",
+      "domain": "extraversion",
+      "assigned": 2.7574027570114445,
+      "measured": 2.25
+    },
+    {
+      "agent": "agent_17",
+      "domain": "agreeableness",
+      "assigned": 3.6238052218293686,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_17",
+      "domain": "conscientiousness",
+      "assigned": 2.5031639273574546,
+      "measured": 2.5
+    },
+    {
+      "agent": "agent_17",
+      "domain": "neuroticism",
+      "assigned": 1.988141035720965,
+      "measured": 1.0
+    },
+    {
+      "agent": "agent_17",
+      "domain": "openness",
+      "assigned": 3.2309713320752977,
+      "measured": 4.0
+    },
+    {
+      "agent": "agent_18",
+      "domain": "extraversion",
+      "assigned": 3.6118207413875036,
+      "measured": 4.0
+    },
+    {
+      "agent": "agent_18",
+      "domain": "agreeableness",
+      "assigned": 4.516095963465978,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_18",
+      "domain": "conscientiousness",
+      "assigned": 3.6879965714435876,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_18",
+      "domain": "neuroticism",
+      "assigned": 2.996023209399852,
+      "measured": 2.25
+    },
+    {
+      "agent": "agent_18",
+      "domain": "openness",
+      "assigned": 3.709180089555701,
+      "measured": 4.0
+    },
+    {
+      "agent": "agent_19",
+      "domain": "extraversion",
+      "assigned": 4.113555835090203,
+      "measured": 4.25
+    },
+    {
+      "agent": "agent_19",
+      "domain": "agreeableness",
+      "assigned": 4.336013119242923,
+      "measured": 4.75
+    },
+    {
+      "agent": "agent_19",
+      "domain": "conscientiousness",
+      "assigned": 3.8779006550149027,
+      "measured": 4.25
+    },
+    {
+      "agent": "agent_19",
+      "domain": "neuroticism",
+      "assigned": 2.041791772416016,
+      "measured": 1.0
+    },
+    {
+      "agent": "agent_19",
+      "domain": "openness",
+      "assigned": 4.187200454323987,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_20",
+      "domain": "extraversion",
+      "assigned": 3.585785345966814,
+      "measured": 3.75
+    },
+    {
+      "agent": "agent_20",
+      "domain": "agreeableness",
+      "assigned": 4.536164929828532,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_20",
+      "domain": "conscientiousness",
+      "assigned": 3.6805607147572115,
+      "measured": 4.5
+    },
+    {
+      "agent": "agent_20",
+      "domain": "neuroticism",
+      "assigned": 4.2648256933628845,
+      "measured": 5.0
+    },
+    {
+      "agent": "agent_20",
+      "domain": "openness",
+      "assigned": 3.3667303787908156,
+      "measured": 3.75
+    }
+  ],
+  "metrics": {
+    "extraversion": {
+      "r": 0.9511109401552486,
+      "r_squared": 0.9046120204830008,
+      "mae": 0.5454182533506545,
+      "bias": -0.03361316011145421,
+      "n": 20,
+      "assigned_mean": 3.2586131601114543,
+      "measured_mean": 3.225
+    },
+    "agreeableness": {
+      "r": 0.7987054071576759,
+      "r_squared": 0.6379303274229089,
+      "mae": 0.7346637982467634,
+      "bias": 0.7346637982467632,
+      "n": 20,
+      "assigned_mean": 4.015336201753237,
+      "measured_mean": 4.75
+    },
+    "conscientiousness": {
+      "r": 0.90870689307167,
+      "r_squared": 0.8257482175159674,
+      "mae": 0.5504327162091266,
+      "bias": 0.4441626186864691,
+      "n": 20,
+      "assigned_mean": 3.5933373813135305,
+      "measured_mean": 4.0375
+    },
+    "neuroticism": {
+      "r": 0.9401120892748788,
+      "r_squared": 0.8838107404007777,
+      "mae": 0.8298314919973759,
+      "bias": -0.6916433580292791,
+      "n": 20,
+      "assigned_mean": 2.941643358029279,
+      "measured_mean": 2.25
+    },
+    "openness": {
+      "r": 0.9254852077012409,
+      "r_squared": 0.856522869673809,
+      "mae": 0.6717137948011602,
+      "bias": 0.6597046989535729,
+      "n": 20,
+      "assigned_mean": 3.565295301046427,
+      "measured_mean": 4.225
+    }
+  },
+  "pooled": {
+    "r": 0.9112915049519171,
+    "r_squared": 0.83045220699753,
+    "mae": 0.6664120109210161
+  }
+}

@@ -6,8 +6,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
-from src.framework.personalities import POPULATION_NORMS, DOMAINS
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+from replicant.personalities import POPULATION_NORMS, DOMAINS
 
 FIGURES_DIR = "paper/figures"
 os.makedirs(FIGURES_DIR, exist_ok=True)
