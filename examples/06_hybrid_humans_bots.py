@@ -1,8 +1,8 @@
 """
-Example: hybrid oTree session with LLM bots and human participants.
+Example 6: Hybrid oTree session — mix LLM bots with human participants.
 
-Run this from project root:
-    python examples/hybrid_session.py
+Run from project root:
+    python examples/06_hybrid_humans_bots.py
 
 It will:
   1. Create an oTree session with 6 participants for "ertan2009"

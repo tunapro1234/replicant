@@ -6,6 +6,11 @@ from .factory import (
     SENTENCES,
     build_description,
     blend_sentences,
+    score_to_weight,
+    # Top-level researcher API
+    build_personality,
+    sample_personalities,
+    list_personalities,
 )
 from .validation import (
     run_level_validation,
@@ -17,6 +22,11 @@ from .validation import (
 )
 
 __all__ = [
+    # Top-level helpers (the friendly API)
+    "build_personality",
+    "sample_personalities",
+    "list_personalities",
+    # Lower-level
     "PersonalityFactory",
     "PROFILES",
     "POPULATION_NORMS",
@@ -24,6 +34,8 @@ __all__ = [
     "SENTENCES",
     "build_description",
     "blend_sentences",
+    "score_to_weight",
+    # Validation
     "run_level_validation",
     "run_continuous_validation",
     "MINI_IPIP",

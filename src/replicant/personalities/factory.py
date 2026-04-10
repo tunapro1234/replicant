@@ -288,10 +288,119 @@ def build_description(weights):
     return "\n".join(lines)
 
 
-def _score_to_weight(score):
-    """Convert 1-5 Mini-IPIP score to -3 to +3 weight."""
-    # 1.0 -> -3, 3.0 -> 0, 5.0 -> +3
+def score_to_weight(score):
+    """Convert 1-5 Mini-IPIP score to -3 to +3 sentence-bank weight."""
     return (score - 3.0) * 1.5
+
+
+# Backwards-compat alias (was previously private)
+_score_to_weight = score_to_weight
+
+
+# ── Top-level helpers (researcher-friendly API) ─────────────────────
+
+def build_personality(
+    extraversion: float = 3.0,
+    agreeableness: float = 3.0,
+    conscientiousness: float = 3.0,
+    neuroticism: float = 3.0,
+    openness: float = 3.0,
+) -> str:
+    """
+    Build a single personality description from explicit OCEAN scores.
+
+    All scores are on the 1-5 scale (3.0 = average, 5.0 = high, 1.0 = low).
+    Returns the personality description as a string.
+
+    Example:
+        # A highly agreeable, low-neuroticism agent
+        desc = build_personality(
+            agreeableness=4.5,
+            neuroticism=1.5,
+        )
+    """
+    weights = {
+        "extraversion": score_to_weight(extraversion),
+        "agreeableness": score_to_weight(agreeableness),
+        "conscientiousness": score_to_weight(conscientiousness),
+        "neuroticism": score_to_weight(neuroticism),
+        "openness": score_to_weight(openness),
+    }
+    return build_description(weights)
+
+
+def sample_personalities(
+    n: int = 20,
+    seed: int = None,
+    extraversion: float = None,
+    agreeableness: float = None,
+    conscientiousness: float = None,
+    neuroticism: float = None,
+    openness: float = None,
+    sd_scale: float = 1.0,
+) -> list[str]:
+    """
+    Sample N personality descriptions from population norms.
+
+    By default samples from US adult Big Five norms (Soto & John, 2017).
+    To skew the population on a trait, pass that trait as a kwarg — it
+    overrides the population mean for that trait.
+
+    Args:
+        n: number of personalities to sample
+        seed: random seed for reproducibility
+        extraversion, agreeableness, ...: override the population mean
+            for that trait (1-5 scale). Leave as None to use the default.
+        sd_scale: scale factor for standard deviations (1.0 = default,
+            0.0 = no variance, 2.0 = double variance)
+
+    Returns:
+        list of personality description strings (one per agent)
+
+    Examples:
+        # Default population
+        personalities = sample_personalities(n=50)
+
+        # All disagreeable
+        personalities = sample_personalities(n=50, agreeableness=1.5)
+
+        # Extreme low neuroticism, fixed exactly
+        personalities = sample_personalities(n=50, neuroticism=1.0, sd_scale=0.0)
+
+        # High variance population
+        personalities = sample_personalities(n=50, sd_scale=2.0)
+    """
+    rng = random.Random(seed)
+    overrides = {
+        "extraversion": extraversion,
+        "agreeableness": agreeableness,
+        "conscientiousness": conscientiousness,
+        "neuroticism": neuroticism,
+        "openness": openness,
+    }
+
+    personalities = []
+    for _ in range(n):
+        weights = {}
+        for domain, norms in POPULATION_NORMS.items():
+            mean = overrides[domain] if overrides[domain] is not None else norms["mean"]
+            sd = norms["sd"] * sd_scale
+            score = rng.gauss(mean, sd) if sd > 0 else mean
+            score = max(1.0, min(5.0, score))
+            weights[domain] = score_to_weight(score)
+        personalities.append(build_description(weights))
+    return personalities
+
+
+def list_personalities(personalities: list[str], domain_scores: list[dict] = None):
+    """Pretty-print a list of personality descriptions for inspection."""
+    for i, desc in enumerate(personalities, 1):
+        print(f"\n{'='*60}")
+        print(f"Personality {i}")
+        if domain_scores and i <= len(domain_scores):
+            print(" ".join(f"{d[:3]}={s:.1f}" for d, s in domain_scores[i-1].items()))
+        print(f"{'='*60}")
+        print(desc)
 
 
 # ── PersonalityFactory ───────────────────────────────────────────────

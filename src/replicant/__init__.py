@@ -24,7 +24,17 @@ Usage:
 
 from .experiments.runner import BehavioralExperiment
 from .experiments.comparison import PaperComparison
-from .personalities.factory import PersonalityFactory
+from .personalities.factory import (
+    PersonalityFactory,
+    build_personality,
+    sample_personalities,
+)
 
 __version__ = "0.2.0"
-__all__ = ["BehavioralExperiment", "PaperComparison", "PersonalityFactory"]
+__all__ = [
+    "BehavioralExperiment",
+    "PaperComparison",
+    "PersonalityFactory",
+    "build_personality",
+    "sample_personalities",
+]
