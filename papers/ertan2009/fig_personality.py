@@ -6,10 +6,12 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(_HERE, "..", "..", "src"))
 from replicant.personalities import POPULATION_NORMS, DOMAINS
 
-FIGURES_DIR = "paper/figures"
+RESULTS_DIR = os.path.join(_HERE, "results")
+FIGURES_DIR = os.path.join(_HERE, "replicated", "figures")
 os.makedirs(FIGURES_DIR, exist_ok=True)
 
 # Recreate agent traits (seed=42)
@@ -24,7 +26,7 @@ for i in range(50):
     agent_traits.append({"name": f"random_{i+1}", **weights})
 traits_df = pd.DataFrame(agent_traits)
 
-baseline = pd.read_csv("results/big5_random_baseline.csv")
+baseline = pd.read_csv(os.path.join(RESULTS_DIR, "big5_random_baseline.csv"))
 merged = baseline.merge(traits_df, left_on="agent.agent_name", right_on="name")
 
 # Figure 5: Personality correlations with baseline contribution

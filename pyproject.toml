@@ -30,7 +30,7 @@ replicant-otree = "replicant.otree.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["replicant*", "papers*"]
+include = ["replicant*"]
 
 [build-system]
 requires = ["setuptools>=61"]

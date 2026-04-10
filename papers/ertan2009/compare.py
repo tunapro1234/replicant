@@ -15,9 +15,10 @@ import pandas as pd
 import numpy as np
 from scipy import stats
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
+_HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(_HERE, "..", "..", "src"))
 
-RESULTS_DIR = "results"
+RESULTS_DIR = os.path.join(_HERE, "results")
 
 REGIMES = ["no_punishment", "punish_low_only", "punish_high_only", "unrestricted"]
 PROFILES = ["all_cooperate", "mixed", "one_freerider"]

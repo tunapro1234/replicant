@@ -23,44 +23,45 @@ Two reasons. First, replication: the goal is to reproduce human behavioral findi
 
 ```
 src/
-├── replicant/                            # The framework
-│   ├── experiments/
-│   │   ├── runner.py                     # BehavioralExperiment
-│   │   ├── comparison.py                 # PaperComparison
-│   │   └── templates/
-│   │       └── public_goods.py           # Reusable VCM surveys
-│   ├── personalities/
-│   │   ├── factory.py                    # PersonalityFactory + sentence bank
-│   │   └── validation.py                 # Mini-IPIP cross-instrument testing
-│   ├── otree/
-│   │   ├── client.py                     # HTTP client for oTree server
-│   │   ├── bot.py                        # LLMBot + FormController
-│   │   ├── parser.py                     # Parse oTree app source
-│   │   └── translator.py                 # oTree → EDSL converter
-│   └── analysis/                         # (reserved for future generic tools)
-│
-└── papers/                               # Paper-specific implementations
-    └── ertan2009/
-        ├── config.py                     # Game parameters + paper findings
-        ├── experiment.py                 # Wires template to config
-        ├── analyze.py                    # Paper-specific analysis
-        ├── run.py                        # CLI entry point
-        ├── compare.py                    # Default vs personality comparison
-        ├── figures.py                    # Plot generation
-        └── fig_personality.py            # Personality scatter plots
+└── replicant/                            # The framework (installable package)
+    ├── experiments/
+    │   ├── runner.py                     # BehavioralExperiment
+    │   ├── comparison.py                 # PaperComparison
+    │   └── templates/
+    │       └── public_goods.py           # Reusable VCM surveys
+    ├── personalities/
+    │   ├── factory.py                    # PersonalityFactory + sentence bank
+    │   └── validation.py                 # Mini-IPIP cross-instrument testing
+    ├── otree/
+    │   ├── client.py                     # HTTP client for oTree server
+    │   ├── bot.py                        # LLMBot + FormController
+    │   ├── parser.py                     # Parse oTree app source
+    │   └── translator.py                 # oTree → EDSL converter
+    └── analysis/                         # (reserved for future generic tools)
+
+papers/                                   # Paper replications (each self-contained)
+└── ertan2009/
+    ├── config.py                         # Game parameters + paper findings
+    ├── experiment.py                     # Wires template to config
+    ├── analyze.py                        # Paper-specific analysis
+    ├── run.py                            # CLI entry point
+    ├── compare.py                        # Default vs personality comparison
+    ├── figures.py                        # Plot generation
+    ├── fig_personality.py                # Personality scatter plots
+    ├── results/                          # CSV data, JSON summaries
+    │   ├── default_*.csv
+    │   ├── big5_random_*.csv
+    │   └── *_summary.json
+    └── replicated/                       # The research paper output
+        ├── paper.tex
+        ├── paper.pdf                     # 16 pages
+        └── figures/                      # 5 figures
 
 tests/
 └── otree_server/                         # Real oTree server (Docker)
     ├── ertan2009/                        # Our experiment as an oTree app
     ├── dictator/, prisoner/, trust/, ...  # 12+ classic games
     └── Dockerfile
-
-paper/                                    # The research paper
-├── paper.tex
-├── paper.pdf                              # 16 pages
-└── figures/
-
-results/                                  # Experiment outputs (CSV/JSON)
 ```
 
 ## Quick Start
@@ -80,9 +81,9 @@ export OPEN_ROUTER_API_KEY="your-key-here"
 
 ### Run a paper replication
 
-```bash
-cd src
+From the project root:
 
+```bash
 # Default: 50 agents, no personality
 python -m papers.ertan2009.run -n 50
 

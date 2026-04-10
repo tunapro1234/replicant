@@ -1,7 +1,7 @@
 """
 Ertan 2009 — CLI entry point.
 
-Usage:
+Usage (from project root):
     python -m papers.ertan2009.run -n 50
     python -m papers.ertan2009.run -n 50 --random-personalities
     python -m papers.ertan2009.run -n 20 --big5
@@ -12,12 +12,19 @@ import sys
 import json
 import argparse
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
+# Add src/ to path so `replicant` is importable
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+sys.path.insert(0, os.path.join(PROJECT_ROOT, "src"))
 
 from replicant import PersonalityFactory
 
 from .experiment import build
 from .analyze import analyze, save_results
+
+
+# Per-paper output directory
+PAPER_DIR = os.path.dirname(__file__)
+RESULTS_DIR = os.path.join(PAPER_DIR, "results")
 
 
 def main():
@@ -49,11 +56,12 @@ def main():
 
     prefix = args.output_prefix or condition
 
+    os.makedirs(RESULTS_DIR, exist_ok=True)
     results = exp.run(agents)
     summary = analyze(results, label=condition)
-    save_results(results, prefix)
+    save_results(results, prefix, output_dir=RESULTS_DIR)
 
-    summary_path = os.path.join("results", f"{prefix}_summary.json")
+    summary_path = os.path.join(RESULTS_DIR, f"{prefix}_summary.json")
     with open(summary_path, "w") as f:
         json.dump(summary, f, indent=2, default=str)
     print(f"Summary saved to {summary_path}", flush=True)

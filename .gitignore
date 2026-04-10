@@ -2,9 +2,16 @@
 __pycache__/
 *.pyc
 .env
-# Keep experiment results, ignore old test artifacts
-results/results_*.csv
-results/checkpoint_*.json
+
+# LaTeX build artifacts
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# Old paths (kept ignored just in case)
 checkpoints/
 *.egg-info/
 dist/

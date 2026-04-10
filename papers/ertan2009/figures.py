@@ -8,10 +8,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../.."))
-
-RESULTS_DIR = "results"
-FIGURES_DIR = "paper/figures"
+_HERE = os.path.dirname(os.path.abspath(__file__))
+RESULTS_DIR = os.path.join(_HERE, "results")
+FIGURES_DIR = os.path.join(_HERE, "replicated", "figures")
 os.makedirs(FIGURES_DIR, exist_ok=True)
 
 REGIMES = ["no_punishment", "punish_low_only", "punish_high_only", "unrestricted"]
