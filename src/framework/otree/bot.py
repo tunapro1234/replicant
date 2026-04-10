@@ -224,6 +224,17 @@ class LLMBot:
                 response = self._call_llm(prompt["system"], prompt["user"])
                 raw = _parse_json_response(response)
 
+                # If the LLM returned a value but under a different key,
+                # try to salvage it
+                if field.name not in raw and len(raw) == 1:
+                    only_key = list(raw.keys())[0]
+                    raw[field.name] = raw.pop(only_key)
+
+                # If the LLM returned the value directly (not in JSON),
+                # try to parse it as the field value
+                if not raw and response.strip():
+                    raw = _try_direct_value(response.strip(), field)
+
                 cleaned, errors = self.controller.validate(raw, [field])
                 if not errors and field.name in cleaned:
                     all_answers[field.name] = cleaned[field.name]
@@ -232,7 +243,13 @@ class LLMBot:
                 feedback = self._build_feedback(errors, cleaned, [field])
 
             if field.name not in all_answers:
-                return {}  # failed on this field, abort
+                # Log the failure details for debugging
+                self.log.append({
+                    'page': 'FIELD_FAILURE',
+                    'error': f"Failed on field '{field.name}' after {MAX_LLM_RETRIES} attempts. "
+                             f"Last response: {response[:200] if response else 'empty'}",
+                })
+                return {}
 
         return all_answers
 
@@ -307,7 +324,7 @@ class LLMBot:
         }
         payload = {
             "model": self.model,
-            "max_tokens": 4000,
+            "max_tokens": 16000,
             "temperature": 0.5,
             "messages": [
                 {"role": "system", "content": system_prompt},
@@ -322,7 +339,13 @@ class LLMBot:
                     time.sleep(3 * (attempt + 1))
                     continue
                 r.raise_for_status()
-                return r.json()["choices"][0]["message"]["content"]
+                content = r.json()["choices"][0]["message"].get("content")
+                if content:
+                    return content
+                # Reasoning model might put answer in reasoning field
+                # with empty content — retry
+                time.sleep(2)
+                continue
             except Exception:
                 if attempt < 2:
                     time.sleep(2 ** attempt)
@@ -423,6 +446,30 @@ def _parse_json_response(text: str) -> dict:
             return json.loads(text[start:end])
         except (json.JSONDecodeError, TypeError):
             pass
+
+    return {}
+
+
+def _try_direct_value(text: str, field: FormField) -> dict:
+    """Try to interpret raw text as a direct value for the field."""
+    text = text.strip().strip('"').strip("'")
+
+    if field.input_type == 'number':
+        try:
+            val = float(text.split()[0])  # take first number-like token
+            return {field.name: val}
+        except (ValueError, IndexError):
+            # Try to find any number in the text
+            import re
+            m = re.search(r'\d+', text)
+            if m:
+                return {field.name: int(m.group())}
+
+    if field.choices:
+        # Check if the text matches a choice
+        for value, display in field.choices:
+            if display.lower() in text.lower() or value.lower() in text.lower():
+                return {field.name: value}
 
     return {}
 
