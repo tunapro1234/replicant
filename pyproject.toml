@@ -45,7 +45,7 @@ all = ["pandas>=2.0", "matplotlib>=3.7", "scipy>=1.10", "otree>=6.0"]
 Homepage = "https://github.com/tunapro1234/replicant"
 Repository = "https://github.com/tunapro1234/replicant"
 Issues = "https://github.com/tunapro1234/replicant/issues"
-Changelog = "https://github.com/tunapro1234/replicant/blob/main/CHANGELOG.md"
+Changelog = "https://github.com/tunapro1234/replicant/blob/stable/CHANGELOG.md"
 
 [project.scripts]
 replicant-otree = "replicant.otree.__main__:main"
