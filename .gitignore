@@ -10,6 +10,8 @@ __pycache__/
 *.fls
 *.fdb_latexmk
 *.synctex.gz
+*.bbl
+*.blg
 
 # Old paths (kept ignored just in case)
 checkpoints/

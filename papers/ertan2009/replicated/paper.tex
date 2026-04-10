@@ -115,8 +115,6 @@ Our design departs from the original in three ways beyond the parameter scaling 
 
 The experiment is implemented as a standard \texttt{oTree} app \citep{otree} with one page per decision. Instead of scripting questions in a survey framework, each LLM agent connects to a running oTree server as an HTTP client, following the same participant URL a human subject would, reading the rendered HTML, and submitting form values through the normal oTree endpoints. All game logic---payoffs, regime presentation, punishment accounting---lives on the oTree side and is identical to what a human would experience.
 
-This architecture is, as it turns out, not a cosmetic detail. The same base model placed in a bare one-shot survey context versus a structured oTree form produces dramatically different behavior on the same questions. We return to this point in Section~\ref{sec:discussion}.
-
 \subsection{Conditions}
 
 \textbf{Default Condition ($N=50$).} Agents receive no personality assignment. Each agent reads the standard oTree instructions and answers the forms with no additional system-level persona beyond the default instruction to act as an experimental participant.
