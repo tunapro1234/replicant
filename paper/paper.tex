@@ -53,7 +53,7 @@ Our contributions are as follows:
 \begin{enumerate}
   \item We demonstrate that personality induction is not optional but \emph{necessary} for LLMs to produce human-like behavioral variance in economic experiments.
   \item We identify systematic biases: personality-endowed agents are more cooperative but less punitive than humans, suggesting RLHF alignment creates a prosociality floor and a punishment ceiling.
-  \item We validate the BFI-2-Expanded approach using cross-instrument measurement (Mini-IPIP), achieving 88\% domain-level alignment.
+  \item We validate the BFI-2-Expanded approach using cross-instrument measurement (Mini-IPIP), achieving a pooled correlation of $r = .91$ ($R^2 = .83$) between assigned and measured trait scores.
   \item We provide an open-source framework for running personality-endowed economic experiments with LLMs.
 \end{enumerate}
 
@@ -166,32 +166,41 @@ Each agent's complete personality description (15 sentences, 3 per domain) is em
 
 Before running the economic experiment, we validated personality induction using cross-instrument measurement. Agents were assigned personality via BFI-2-Expanded descriptions and measured using the Mini-IPIP 20-item inventory \citep{donnellan2006mini}, which uses entirely different item wording. This prevents the model from simply echoing the assignment.
 
-Five named profiles were tested---cooperative (high agreeableness and conscientiousness, low neuroticism), selfish (low agreeableness and conscientiousness, high neuroticism), leader (high extraversion, conscientiousness, and openness), anxious (low extraversion, high neuroticism, low openness), and average (all domains neutral).
+We sampled $N = 20$ agents with continuous trait scores drawn from US adult population norms (Table~\ref{tab:norms}), administered the Mini-IPIP to each, and computed the relationship between assigned and measured scores per Big Five domain.
 
 \begin{table}[H]
 \centering
-\caption{Personality Validation: BFI-2-Expanded Assignment vs.\ Mini-IPIP Measurement}
+\caption{Cross-Instrument Validation: Assigned (BFI-2-Expanded) vs.\ Measured (Mini-IPIP)}
 \label{tab:validation}
-\begin{tabular}{lcccccc}
+\begin{tabular}{lcccc}
 \toprule
-Profile & EXT & AGR & CON & NEU & OPE & Match \\
+Domain & Pearson $r$ & $R^2$ & MAE & Bias \\
 \midrule
-Cooperative & 3.00 & \textbf{4.75} & \textbf{4.50} & \textbf{1.00} & 3.50 & 5/5 \\
-Selfish & 1.75$^\dagger$ & \textbf{1.00} & \textbf{1.25} & \textbf{5.00} & 3.50 & 4/5 \\
-Leader & \textbf{4.75} & 3.50 & \textbf{4.75} & \textbf{1.00} & \textbf{5.00} & 5/5 \\
-Anxious & \textbf{1.00} & 3.00 & 2.50 & \textbf{5.00} & \textbf{1.00} & 5/5 \\
-Average & 3.00 & 4.00$^\ddagger$ & 2.75 & 3.00 & 4.00$^\ddagger$ & 3/5 \\
+Extraversion & .951 & .91 & 0.55 & $-0.03$ \\
+Agreeableness & .799 & .64 & 0.74 & $+0.74$ \\
+Conscientiousness & .909 & .83 & 0.55 & $+0.44$ \\
+Neuroticism & .940 & .88 & 0.83 & $-0.69$ \\
+Openness & .925 & .86 & 0.67 & $+0.66$ \\
 \midrule
-\multicolumn{6}{l}{Overall alignment} & 22/25 (88\%) \\
+\textbf{Pooled} & \textbf{.911} & \textbf{.83} & \textbf{0.67} & --- \\
 \bottomrule
 \end{tabular}
 
 \medskip
 \footnotesize
-\textit{Note.} Bold = assigned extreme (high or low), correctly measured. $^\dagger$ Extraversion pulled low by negative trait descriptions. $^\ddagger$ Upward drift due to RLHF prosociality bias. Domain scores on 1--5 scale; classified as high ($\geq 3.75$), average (2.25--3.75), or low ($\leq 2.25$).
+\textit{Note.} $N = 20$ agents, each scored on all 5 domains (100 paired observations). Bias is measured mean minus assigned mean (positive = model overestimates the trait). All correlations significant at $p < .001$. MAE on the original 1--5 Mini-IPIP scale.
 \end{table}
 
-Results showed 88\% domain-level alignment (22/25 domain-profile combinations correctly classified; Table~\ref{tab:validation}). Extreme profiles achieved near-perfect alignment, while the average profile exhibited upward drift in agreeableness and openness---a known artifact of RLHF training that biases models toward prosocial and intellectually curious responses \citep{salecha2024social}.
+Personality induction worked strongly across all domains, with a pooled Pearson correlation of $r = .911$ ($R^2 = .83$) between assigned and measured scores. This means 83\% of the variance in measured personality is explained by the BFI-2-Expanded assignment---a substantial transfer that goes far beyond chance.
+
+Per-domain results revealed two systematic biases relevant to interpreting downstream behavior:
+
+\begin{itemize}
+  \item \textbf{Agreeableness shows the weakest correlation} ($r = .80$) and the largest positive bias ($+0.74$ on a 5-point scale). The model resists embodying low-agreeableness profiles and drifts toward warmth and prosociality. This pattern is consistent with reinforcement learning from human feedback (RLHF) training, which optimizes for helpful, harmless responses \citep{salecha2024social}.
+  \item \textbf{Neuroticism shows the strongest negative bias} ($-0.69$). The model resists expressing high-neuroticism (anxious, depressed, volatile) profiles and defaults toward emotional stability. Together with the agreeableness bias, this suggests RLHF creates a ``positive affect floor'' that distorts personality assignment in predictable directions.
+\end{itemize}
+
+Extraversion ($r = .95$, bias $\approx 0$), neuroticism ($r = .94$), and openness ($r = .93$) show near-perfect correlations despite the bias on neuroticism, indicating that the \emph{relative ordering} of agents on these traits is preserved even when the absolute level shifts. This is important: for analyses comparing high vs.\ low trait agents within the same population, the personality assignment is highly reliable.
 
 \subsection{Model and Infrastructure}
 
@@ -363,7 +372,7 @@ Several limitations should be noted.
 \section{Conclusion}
 %----------------------------------------------------------------------
 
-We demonstrate that personality induction via BFI-2-Expanded descriptions is necessary and effective for generating human-like behavioral variance in LLM-based economic experiments. Default agents produce degenerate hyper-rational behavior; personality-endowed agents cooperate, respond to institutional incentives, and exhibit individual differences. The BFI-2-Expanded format achieves 88\% domain-level alignment in cross-instrument validation, confirming that the personalities are genuinely embodied rather than superficially parroted.
+We demonstrate that personality induction via BFI-2-Expanded descriptions is necessary and effective for generating human-like behavioral variance in LLM-based economic experiments. Default agents produce degenerate hyper-rational behavior; personality-endowed agents cooperate, respond to institutional incentives, and exhibit individual differences. The BFI-2-Expanded format achieves a pooled correlation of $r = .91$ ($R^2 = .83$) between assigned and measured trait scores in cross-instrument validation, confirming that the personalities are genuinely embodied rather than superficially parroted.
 
 However, systematic biases from RLHF training---particularly a prosociality floor and punishment aversion---mean that LLM agents approximate but do not perfectly replicate human economic behavior. These biases are not merely noise; they represent a systematic distortion that researchers must account for when interpreting LLM-based experimental results.
 
