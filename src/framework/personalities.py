@@ -342,16 +342,33 @@ class PersonalityFactory:
             agents.extend(self.create_profile(name, per_profile))
         return AgentList(agents)
 
-    def create_random_population(self, n=20, seed=None):
+    def create_random_population(self, n=20, seed=None, mean_overrides=None,
+                                  sd_overrides=None, name_prefix="random"):
+        """
+        Create a population sampled from Big Five distributions.
+
+        Args:
+            n: number of agents
+            seed: random seed
+            mean_overrides: dict to override population means, e.g.
+                {"agreeableness": 1.5} for a low-agreeableness population
+            sd_overrides: dict to override standard deviations
+            name_prefix: prefix for agent names
+        """
         rng = random.Random(seed)
+        mean_overrides = mean_overrides or {}
+        sd_overrides = sd_overrides or {}
+
         agents = []
         for i in range(n):
             weights = {}
             for domain, norms in POPULATION_NORMS.items():
-                score = rng.gauss(norms["mean"], norms["sd"])
+                mean = mean_overrides.get(domain, norms["mean"])
+                sd = sd_overrides.get(domain, norms["sd"])
+                score = rng.gauss(mean, sd)
                 score = max(1.0, min(5.0, score))
                 weights[domain] = _score_to_weight(score)
-            agents.append(self._make_agent(f"random_{i+1}", weights))
+            agents.append(self._make_agent(f"{name_prefix}_{i+1}", weights))
         return AgentList(agents)
 
     def create_custom(self, weights, n=1, name_prefix="custom"):
