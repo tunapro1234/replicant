@@ -128,7 +128,8 @@ class LLMBot:
     """
 
     def __init__(self, server_url: str, participant_url: str,
-                 personality: str, model: str, api_key: str):
+                 personality: str, model: str, api_key: str,
+                 verbose: bool = False):
         self.client = OTreeClient(server_url)
         self.participant_url = participant_url
         self.personality = personality
@@ -137,44 +138,67 @@ class LLMBot:
         self.name = ""
         self.log: list[dict] = []
         self.controller = FormController()
+        self.verbose = verbose
+        self.page_count = 0
+
+    def _print(self, msg: str):
+        if self.verbose:
+            prefix = f"  [{self.name}]" if self.name else "  [bot]"
+            print(f"{prefix} {msg}", flush=True)
 
     def play(self) -> list[dict]:
         """Play through the entire experiment."""
+        self._print("connecting...")
         page = self.client.get_page(self.participant_url)
         prev_url = None
         page_retry_count = 0
 
         while not page.is_finished:
             if page.is_wait_page:
+                self._print("waiting for other participants...")
                 page = self.client.wait_for_page(page)
                 prev_url = None
                 page_retry_count = 0
                 continue
 
+            self.page_count += 1
+            page_name = self._page_label(page)
+
             # Detect oTree validation error (same page returned after submit)
             if page.url == prev_url:
                 page_retry_count += 1
                 if page_retry_count > MAX_PAGE_RETRIES:
+                    self._print(f"page {page_name}: FAILED (max retries)")
                     self._log_error(page, "Max page retries exceeded, skipping")
                     break
             else:
                 page_retry_count = 0
 
             if page.form_fields:
+                field_names = [f.name for f in page.form_fields]
+                self._print(f"page {self.page_count}: {page_name} ({len(page.form_fields)} fields)")
                 answers = self._decide_with_validation(page)
                 if answers:
                     self.log.append({
-                        'page': self._page_label(page),
+                        'page': page_name,
                         'answers': answers,
                     })
+                    # Print each answer
+                    for k, v in answers.items():
+                        self._print(f"  {k} = {v}")
                     prev_url = page.url
                     page = self.client.submit(page, answers)
                 else:
+                    self._print(f"page {self.page_count}: {page_name}: FAILED (no valid answers)")
                     self._log_error(page, "Could not produce valid answers")
                     break
             else:
+                self._print(f"page {self.page_count}: {page_name} (no fields, advancing)")
                 prev_url = page.url
                 page = self.client.submit(page, {})
+
+        if page.is_finished:
+            self._print(f"done ({self.page_count} pages)")
 
         return self.log
 
@@ -198,6 +222,8 @@ class LLMBot:
         """Ask all fields at once. Used for simple pages (<=3 fields)."""
         feedback = ""
         for attempt in range(MAX_LLM_RETRIES):
+            if attempt > 0:
+                self._print(f"  retry {attempt}/{MAX_LLM_RETRIES}...")
             prompt = self._build_prompt(context, fields, feedback)
             response = self._call_llm(prompt["system"], prompt["user"])
             raw_answers = _parse_json_response(response)
@@ -205,6 +231,10 @@ class LLMBot:
             cleaned, errors = self.controller.validate(raw_answers, fields)
             if not errors and self.controller.is_complete(cleaned, fields):
                 return cleaned
+
+            if errors and self.verbose:
+                for e in errors:
+                    self._print(f"  validation: {e}")
 
             feedback = self._build_feedback(errors, cleaned, fields)
 
@@ -214,9 +244,12 @@ class LLMBot:
         """Ask one field at a time. Used for complex pages (4+ fields)."""
         all_answers = {}
 
-        for field in fields:
+        for fi, field in enumerate(fields):
+            self._print(f"  field {fi+1}/{len(fields)}: {field.name}...")
             feedback = ""
             for attempt in range(MAX_LLM_RETRIES):
+                if attempt > 0:
+                    self._print(f"    retry {attempt}/{MAX_LLM_RETRIES}...")
                 prompt = self._build_prompt(
                     context, [field], feedback,
                     prior_answers=all_answers,
@@ -373,7 +406,8 @@ class LLMBot:
 
 def run_bots(server_url: str, participant_urls: list[str],
              personalities: list[str], model: str,
-             api_key: str = None, names: list[str] = None) -> list[dict]:
+             api_key: str = None, names: list[str] = None,
+             verbose: bool = False) -> list[dict]:
     """
     Run LLM bots concurrently for a list of participant URLs.
     Each bot gets its own thread so WaitPages resolve naturally.
@@ -390,17 +424,20 @@ def run_bots(server_url: str, participant_urls: list[str],
 
     bots = []
     for i in range(n):
-        bot = LLMBot(server_url, participant_urls[i], personalities[i], model, api_key)
+        bot = LLMBot(server_url, participant_urls[i], personalities[i],
+                     model, api_key, verbose=verbose)
         bot.name = names[i]
         bots.append(bot)
 
     results = [None] * n
+    completed = 0
 
     with ThreadPoolExecutor(max_workers=n) as pool:
         futures = {pool.submit(bot.play): i for i, bot in enumerate(bots)}
         for future in as_completed(futures):
             idx = futures[future]
             bot = bots[idx]
+            completed += 1
             try:
                 decisions = future.result()
                 results[idx] = {
@@ -408,12 +445,19 @@ def run_bots(server_url: str, participant_urls: list[str],
                     'url': bot.participant_url,
                     'decisions': decisions,
                 }
+                if verbose:
+                    n_ok = len([d for d in decisions if 'error' not in d])
+                    print(f"  [{bot.name}] finished: {n_ok} pages answered "
+                          f"({completed}/{n} bots done)", flush=True)
             except Exception as e:
                 results[idx] = {
                     'agent': bot.name,
                     'url': bot.participant_url,
                     'error': str(e),
                 }
+                if verbose:
+                    print(f"  [{bot.name}] ERROR: {e} "
+                          f"({completed}/{n} bots done)", flush=True)
 
     return results
 

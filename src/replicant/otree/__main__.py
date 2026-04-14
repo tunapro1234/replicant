@@ -6,35 +6,32 @@ the server side. This tool connects LLM agents as participants.
 
 Usage:
 
-  # Create session and run bots (auto-detects REST API or uses admin)
-  python -m src.framework.otree http://localhost:8000 public_goods -n 6
+  # Create session and run bots
+  python -m replicant.otree http://localhost:8000 public_goods -n 6
 
   # With Big Five personalities
-  python -m src.framework.otree http://localhost:8000 public_goods -n 10 --big5
+  python -m replicant.otree http://localhost:8000 public_goods -n 10 --big5
 
-  # Join an existing session (researcher already created it in admin)
-  python -m src.framework.otree http://localhost:8000 --session-code abc12345 -n 3
+  # Join an existing session
+  python -m replicant.otree http://localhost:8000 --session-code abc12345 -n 3
 
   # Direct participant URLs (for human-AI mixing)
-  python -m src.framework.otree http://localhost:8000 --urls URL1 URL2 URL3
+  python -m replicant.otree http://localhost:8000 --urls URL1 URL2 URL3
 
   # Different model
-  python -m src.framework.otree http://localhost:8000 public_goods -n 6 --model gpt-4o
+  python -m replicant.otree http://localhost:8000 public_goods -n 6 --model deepseek/deepseek-v3.2
 """
 
 import argparse
-import sys
 
 from .client import OTreeClient
 from .bot import run_bots
-from ..personalities import PersonalityFactory
-
-from edsl import Model
+from ..personalities.factory import PersonalityFactory, sample_personalities
 
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="behave-lab",
+        prog="replicant-otree",
         description="Deploy LLM bots to a running oTree experiment.",
     )
     parser.add_argument("server", help="oTree server URL (e.g. http://localhost:8000)")
@@ -42,7 +39,7 @@ def main():
                         help="oTree session config name (e.g. public_goods)")
     parser.add_argument("-n", "--bots", type=int, default=6,
                         help="Number of LLM bots (default: 6)")
-    parser.add_argument("--model", default="qwen/qwen3.6-plus:free",
+    parser.add_argument("--model", default="stepfun/step-3.5-flash",
                         help="LLM model to use")
     parser.add_argument("--big5", action="store_true",
                         help="Use Big Five personality agents")
@@ -51,6 +48,8 @@ def main():
                         help="Join an existing session by its code")
     parser.add_argument("--urls", nargs="+",
                         help="Direct participant URLs (for human-AI mixing)")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Show live progress")
 
     args = parser.parse_args()
     server = args.server.rstrip('/')
@@ -74,25 +73,21 @@ def main():
         parser.error("Provide a session_config name, --session-code, or --urls")
         return
 
-    # ── Build agents ────────────────────────────────────────────────
+    # ── Build personalities ─────────────────────────────────────────
     n = len(urls)
-    factory = PersonalityFactory()
     if args.big5:
-        agents = factory.create_population(per_profile=max(1, n // 5))
-        from edsl import AgentList
-        agents = AgentList(list(agents)[:n])
-        print(f"Big Five agents: {n}")
+        personalities = sample_personalities(n=n, seed=42)
+        print(f"Big Five personalities: {n} agents (random from population norms)")
     else:
-        agents = factory.create_default(n=n)
-
-    model = Model(args.model, service_name="open_router", max_tokens=100000)
+        personalities = [""] * n
 
     # ── Run ─────────────────────────────────────────────────────────
     print(f"\nDeploying {n} LLM bots ({args.model})")
     print(f"Server: {server}")
     print("=" * 55)
 
-    results = run_bots(server, urls, agents, model)
+    results = run_bots(server, urls, personalities, args.model,
+                       verbose=args.verbose)
 
     # ── Report ──────────────────────────────────────────────────────
     print("\n" + "=" * 55)

@@ -1,5 +1,5 @@
 """
-PersonalityFactory — Generate EDSL Agents with validated BFI-2-Expanded personalities.
+PersonalityFactory — Generate BFI-2-Expanded personality descriptions.
 
 Uses the calibrated sentence bank and blending approach from the personality
 validation project (/srv/behave/personality/). Each domain has 7 intensity
@@ -17,7 +17,6 @@ References:
 
 import math
 import random
-from edsl import Agent, AgentList
 
 
 # ── 7-level sentence bank per domain (-3 to +3) ─────────────────────
@@ -407,68 +406,53 @@ def list_personalities(personalities: list[str], domain_scores: list[dict] = Non
 
 class PersonalityFactory:
     """
-    Generate EDSL Agents with validated BFI-2-Expanded personalities.
+    Generate personality descriptions from BFI-2-Expanded sentence bank.
 
     Usage:
         factory = PersonalityFactory()
 
-        # Named profiles (calibrated for Step 3.5 Flash)
-        agents = factory.create_profile("cooperative", n=5)
+        # Named profiles
+        descriptions = factory.create_profile("cooperative", n=5)
 
         # All profiles, balanced
-        agents = factory.create_population(per_profile=4)
+        descriptions = factory.create_population(per_profile=4)
 
         # Random from population norms
-        agents = factory.create_random_population(n=20)
-
-        # Plain agents (no personality)
-        agents = factory.create_default(n=10)
+        descriptions = factory.create_random_population(n=20)
     """
 
     def __init__(self, instruction=None):
         self.instruction = instruction or DEFAULT_INSTRUCTION
 
-    def _make_agent(self, name, weights):
-        description = build_description(weights)
-        return Agent(
-            name=name,
-            traits={"personality": description},
-            instruction=self.instruction,
-        )
-
     def create_profile(self, profile_name, n=1):
         if profile_name not in PROFILES:
             raise ValueError(f"Unknown profile: {profile_name}. Choose from: {list(PROFILES.keys())}")
         weights = PROFILES[profile_name]
-        return AgentList([
-            self._make_agent(f"{profile_name}_{i+1}", weights)
-            for i in range(n)
-        ])
+        return [build_description(weights) for _ in range(n)]
 
     def create_population(self, per_profile=4):
-        agents = []
+        descriptions = []
         for name in PROFILES:
-            agents.extend(self.create_profile(name, per_profile))
-        return AgentList(agents)
+            descriptions.extend(self.create_profile(name, per_profile))
+        return descriptions
 
     def create_random_population(self, n=20, seed=None, mean_overrides=None,
-                                  sd_overrides=None, name_prefix="random"):
+                                  sd_overrides=None):
         """
         Create a population sampled from Big Five distributions.
 
         Args:
-            n: number of agents
+            n: number of personality descriptions
             seed: random seed
             mean_overrides: dict to override population means, e.g.
                 {"agreeableness": 1.5} for a low-agreeableness population
             sd_overrides: dict to override standard deviations
-            name_prefix: prefix for agent names
         """
         rng = random.Random(seed)
         mean_overrides = mean_overrides or {}
         sd_overrides = sd_overrides or {}
 
-        agents = []
+        descriptions = []
         for i in range(n):
             weights = {}
             for domain, norms in POPULATION_NORMS.items():
@@ -477,17 +461,14 @@ class PersonalityFactory:
                 score = rng.gauss(mean, sd)
                 score = max(1.0, min(5.0, score))
                 weights[domain] = _score_to_weight(score)
-            agents.append(self._make_agent(f"{name_prefix}_{i+1}", weights))
-        return AgentList(agents)
+            descriptions.append(build_description(weights))
+        return descriptions
 
-    def create_custom(self, weights, n=1, name_prefix="custom"):
-        return AgentList([
-            self._make_agent(f"{name_prefix}_{i+1}", weights)
-            for i in range(n)
-        ])
+    def create_custom(self, weights, n=1):
+        return [build_description(weights) for _ in range(n)]
 
     def create_default(self, n=10):
-        return AgentList([Agent(name=f"subject_{i+1}") for i in range(n)])
+        return [""] * n
 
     @staticmethod
     def list_profiles():

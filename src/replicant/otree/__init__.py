@@ -1,39 +1,27 @@
 """
 oTree integration — run LLM agents as participants on a real oTree server.
 
-Two modes:
+LLM bots connect to a running oTree server as participants. oTree handles
+rounds, groups, payoffs. Supports human-AI mixing — some participants are
+humans, some are LLMs.
 
-  1. Server mode (primary): LLM bots connect to a running oTree server
-     as participants. oTree handles rounds, groups, payoffs. Supports
-     human-AI mixing — some participants are humans, some are LLMs.
-
-  2. Standalone mode: Parse oTree source code and translate to EDSL
-     surveys. No server needed, good for quick prototyping.
-
-Server mode usage:
+Usage:
     from replicant.otree import OTreeSession
 
     session = OTreeSession("http://localhost:8000", model="stepfun/step-3.5-flash")
     results = session.run("public_goods", n_bots=6)
-
-Standalone mode usage:
-    from replicant.otree import OTreeExperiment
-
-    exp = OTreeExperiment("path/to/public_goods_simple")
-    exp.describe()
-    results = exp.run(n_agents=20)
 """
 
 import os
 
 from .parser import parse, OTreeApp, FieldDef, PageDef
-from .translator import translate
 from .client import OTreeClient, PageData, FormField
 from .bot import LLMBot, FormController, run_bots
 from .hybrid import HybridSession
+from .export import OTreeExporter
 
 from ..personalities import PersonalityFactory, build_description, POPULATION_NORMS
-from ..personalities.factory import _score_to_weight
+from ..personalities.factory import _score_to_weight, sample_personalities
 
 
 # ── Server mode ─────────────────────────────────────────────────────
@@ -90,19 +78,8 @@ class OTreeSession:
         n = len(participant_urls)
 
         if personalities is None:
-            factory = PersonalityFactory()
             if big5:
-                # Sample from population norms
-                import random
-                rng = random.Random()
-                personalities = []
-                for i in range(n):
-                    weights = {}
-                    for domain, norms in POPULATION_NORMS.items():
-                        score = rng.gauss(norms["mean"], norms["sd"])
-                        score = max(1.0, min(5.0, score))
-                        weights[domain] = _score_to_weight(score)
-                    personalities.append(build_description(weights))
+                personalities = sample_personalities(n=n)
             else:
                 personalities = [""] * n
 
@@ -128,7 +105,6 @@ class OTreeSession:
         Returns:
             Path to the saved CSV file.
         """
-        from .export import OTreeExporter
         exporter = OTreeExporter(self.server_url, rest_key=rest_key)
         if app_name:
             return exporter.export_app(app_name, output_dir=output_dir,
@@ -137,12 +113,9 @@ class OTreeSession:
                                      session_code=session_code)
 
 
-from .export import OTreeExporter
-
 __all__ = [
     "OTreeSession", "HybridSession", "OTreeExporter",
-    "parse", "translate",
-    "OTreeApp", "FieldDef", "PageDef",
+    "parse", "OTreeApp", "FieldDef", "PageDef",
     "OTreeClient", "PageData", "FormField",
     "LLMBot", "FormController", "run_bots",
 ]

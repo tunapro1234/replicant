@@ -1,7 +1,7 @@
 """
 PaperComparison — Compare simulation results against original paper findings.
 
-Takes known results from a paper and compares them to EDSL experiment output.
+Takes known results from a paper and compares them to experiment output.
 """
 
 
