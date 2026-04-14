@@ -9,6 +9,12 @@ SESSION_CONFIGS = [
         num_demo_participants=1,
     ),
     dict(
+        name='ertan2009_v2',
+        display_name="Ertan 2009 v2 — Original Parameters",
+        app_sequence=['ertan2009_v2'],
+        num_demo_participants=1,
+    ),
+    dict(
         name='public_goods',
         display_name="Public Goods",
         app_sequence=['public_goods_simple'],

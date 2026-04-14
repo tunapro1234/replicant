@@ -390,7 +390,7 @@ class LLMBot:
         """Route to the right backend based on mode."""
         if self.mode == "stateless":
             return self._call_stateless(user_prompt)
-        elif self.mode == "conversation":
+        elif self.mode == "chat":
             return self._call_chat(user_prompt)
         elif self.mode == "agent":
             return self._call_agent(user_prompt)
@@ -426,7 +426,7 @@ class LLMBot:
         }
         payload = {
             "model": self.model,
-            "max_tokens": 16000,
+            "max_tokens": 64000,
             "temperature": 0.5,
             "messages": messages,
         }
