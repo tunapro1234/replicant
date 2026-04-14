@@ -131,20 +131,20 @@ class LLMBot:
                     Cheapest and fastest. Good for single-shot experiments
                     where each decision is independent.
 
-      "conversation" — Persistent chat across all pages. The LLM sees
+      "chat" — Persistent chat across all pages. The LLM sees
                        its previous decisions, results, and outcomes.
-                       Enables multi-round learning. Default mode.
+                       Enables multi-round learning. Default.
 
       "agent" — OpenClaw agent with persistent memory, self-learning
                 skills, and full autonomy. Most capable but heaviest.
                 Requires: pip install pyreplicant[agent]
     """
 
-    MODES = ("stateless", "conversation", "agent")
+    MODES = ("stateless", "chat", "agent")
 
     def __init__(self, server_url: str, participant_url: str,
                  personality: str, model: str, api_key: str,
-                 verbose: bool = False, mode: str = "conversation"):
+                 verbose: bool = False, mode: str = "chat"):
         if mode not in self.MODES:
             raise ValueError(f"Unknown mode '{mode}'. Choose from: {self.MODES}")
 
@@ -174,11 +174,8 @@ class LLMBot:
         )
         self._system_prompt = "\n".join(system_parts)
 
-        # Conversation mode: persistent message history
+        # Chat mode: persistent message history
         self.messages = [{"role": "system", "content": self._system_prompt}]
-
-        # Agent mode: lazy-init OpenClaw agent
-        self._agent = None
 
     def _print(self, msg: str):
         if self.verbose:
@@ -384,20 +381,17 @@ class LLMBot:
         return prompt
 
     def _remember(self, info: str):
-        """Store info in the agent's memory (conversation or agent mode)."""
-        if self.mode == "conversation":
+        """Store info in the bot's memory (chat mode only)."""
+        if self.mode == "chat":
             self.messages.append({"role": "user", "content": info})
             self.messages.append({"role": "assistant", "content": "(noted)"})
-        elif self.mode == "agent":
-            agent = self._get_agent()
-            agent.remember(info)
 
     def _call_llm(self, user_prompt: str) -> str:
         """Route to the right backend based on mode."""
         if self.mode == "stateless":
             return self._call_stateless(user_prompt)
         elif self.mode == "conversation":
-            return self._call_conversation(user_prompt)
+            return self._call_chat(user_prompt)
         elif self.mode == "agent":
             return self._call_agent(user_prompt)
         return ""
@@ -410,7 +404,7 @@ class LLMBot:
         ]
         return self._post_openrouter(messages)
 
-    def _call_conversation(self, user_prompt: str) -> str:
+    def _call_chat(self, user_prompt: str) -> str:
         """Persistent chat. Full history sent each call."""
         self.messages.append({"role": "user", "content": user_prompt})
         content = self._post_openrouter(self.messages)
@@ -419,24 +413,10 @@ class LLMBot:
 
     def _call_agent(self, user_prompt: str) -> str:
         """OpenClaw agent with persistent memory and skills."""
-        agent = self._get_agent()
-        return agent.chat(user_prompt)
-
-    def _get_agent(self):
-        """Lazy-init the OpenClaw agent."""
-        if self._agent is None:
-            try:
-                from openclaw import Agent as ClawAgent
-            except ImportError:
-                raise ImportError(
-                    "Agent mode requires OpenClaw. Install with:\n"
-                    "  pip install pyreplicant[agent]"
-                )
-            self._agent = ClawAgent(
-                model=self.model,
-                system_prompt=self._system_prompt,
-            )
-        return self._agent
+        raise NotImplementedError(
+            "Agent mode is not implemented yet.\n"
+            "Use mode='chat' (persistent conversation) or mode='stateless' for now."
+        )
 
     def _post_openrouter(self, messages: list[dict]) -> str:
         """Raw OpenRouter API call with retry."""
@@ -494,13 +474,13 @@ class LLMBot:
 def run_bots(server_url: str, participant_urls: list[str],
              personalities: list[str], model: str,
              api_key: str = None, names: list[str] = None,
-             verbose: bool = False, mode: str = "conversation") -> list[dict]:
+             verbose: bool = False, mode: str = "chat") -> list[dict]:
     """
     Run LLM bots concurrently for a list of participant URLs.
     Each bot gets its own thread so WaitPages resolve naturally.
 
-    Modes: "stateless" (no memory), "conversation" (persistent chat),
-           "agent" (OpenClaw agent).
+    Modes: "stateless" (no memory), "chat" (persistent conversation),
+           "agent" (not yet implemented).
     """
     api_key = api_key or os.environ.get("OPEN_ROUTER_API_KEY", "")
     if not api_key:

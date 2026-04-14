@@ -139,13 +139,13 @@ def _get_model():
 def _get_mode():
     print()
     print("  Bot mode:")
-    print("    [1] Stateless     — fresh context each page (cheapest, no memory)")
-    print("    [2] Conversation  — persistent chat (remembers previous rounds)")
-    print("    [3] Agent         — OpenClaw agent (self-learning, requires openclaw)")
+    print("    [1] Stateless  — fresh context each page (cheapest, no memory)")
+    print("    [2] Chat       — persistent conversation (remembers previous rounds)")
+    print("    [3] Agent      — OpenClaw agent (not yet implemented)")
     print()
     choice = input("  Mode [2]: ").strip() or "2"
-    modes = {"1": "stateless", "2": "conversation", "3": "agent"}
-    mode = modes.get(choice, "conversation")
+    modes = {"1": "stateless", "2": "chat", "3": "agent"}
+    mode = modes.get(choice, "chat")
     return mode
 
 
