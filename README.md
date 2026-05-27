@@ -130,11 +130,13 @@ disagreeable = sample_personalities(n=20, agreeableness=1.5)
 ### Validate personality induction
 
 ```python
-from replicant.personalities import run_continuous_validation
+from replicant.personalities import run_validation
 
-results = run_continuous_validation(n=20, model="stepfun/step-3.5-flash")
-# Reports Pearson r, R², MAE, bias per Big Five domain
-# Pooled r ≈ 0.91 for Step 3.5 Flash
+report = run_validation(n=5, model="stepfun/step-3.5-flash")
+# Reports Pearson r (with bootstrapped 95% CI), R², MAE, bias per Big
+# Five domain, plus per-item discrimination. Start with N=5 to sanity-
+# check, then scale. Agent structure matches papers (chat mode, same
+# system prompt shape) — no EDSL dependency.
 ```
 
 ## How it works

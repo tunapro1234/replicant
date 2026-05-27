@@ -29,16 +29,13 @@ def test_personalities():
 
 def test_personalities_validation():
     from replicant.personalities import (
-        run_level_validation,
-        run_continuous_validation,
         MINI_IPIP,
-        build_mini_ipip_survey,
-        score_results,
-        level_from_score,
+        measure_agent,
+        run_validation,
     )
     assert len(MINI_IPIP) == 20
-    assert callable(run_level_validation)
-    assert callable(run_continuous_validation)
+    assert callable(measure_agent)
+    assert callable(run_validation)
 
 
 def test_otree():
