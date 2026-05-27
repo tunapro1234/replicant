@@ -125,9 +125,13 @@ def _validate(answers: dict, fields: list[FormField]) -> tuple[dict, list[str]]:
         if val is None:
             errors.append(f"missing: {f.name}")
         elif f.choices:
-            valid = [v for v, _ in f.choices]
-            if str(val) in valid:
-                cleaned[f.name] = str(val)
+            valid = {v: v for v, _ in f.choices}
+            display = {d.lower(): v for v, d in f.choices}
+            s = str(val)
+            if s in valid:
+                cleaned[f.name] = s
+            elif s.lower() in display:
+                cleaned[f.name] = display[s.lower()]
             else:
                 errors.append(f"{f.name}: invalid choice '{val}'")
         elif f.input_type == "number":
