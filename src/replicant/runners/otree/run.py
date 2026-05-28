@@ -8,7 +8,8 @@ from ...providers import openrouter
 MAX_RETRIES = 5
 
 
-def play(participant_url: str, persona: str, model: str, api_key: str = None) -> dict:
+def play(participant_url: str, persona: str, model: str, api_key: str = None,
+         temperature: float = 1.0, seed: int = None) -> dict:
     server_url = re.match(r'(https?://[^/]+)', participant_url).group(1)
     client = OTreeClient(server_url)
     log = []
@@ -32,7 +33,8 @@ def play(participant_url: str, persona: str, model: str, api_key: str = None) ->
         if page.form_fields:
             prompt = _build_prompt(page)
             messages.append({"role": "user", "content": prompt})
-            raw, answers = _get_valid_answers(messages, page.form_fields, model, api_key)
+            raw, answers = _get_valid_answers(messages, page.form_fields, model,
+                                              api_key, temperature, seed)
             if answers:
                 log.append({"page": _page_name(page), "prompt": prompt, "raw": raw, "answers": answers})
                 messages.append({"role": "assistant", "content": json.dumps(answers)})
@@ -51,13 +53,15 @@ def play(participant_url: str, persona: str, model: str, api_key: str = None) ->
 
 def run_batch(server_url: str, session_config: str, n: int,
               personas: list[str], model: str, api_key: str = None,
-              rest_key: str = "test-rest-key") -> list[dict]:
+              rest_key: str = "test-rest-key",
+              temperature: float = 1.0, seed: int = None) -> list[dict]:
     urls = OTreeClient.create_session(server_url, session_config, n, rest_key)
 
     results = [None] * n
     with ThreadPoolExecutor(max_workers=n) as pool:
         futures = {
-            pool.submit(play, urls[i], personas[i], model, api_key): i
+            pool.submit(play, urls[i], personas[i], model, api_key,
+                        temperature, seed): i
             for i in range(n)
         }
         for future in as_completed(futures):
@@ -89,9 +93,9 @@ def _build_prompt(page: PageData) -> str:
     return "\n".join(parts)
 
 
-def _get_valid_answers(messages, fields, model, api_key):
+def _get_valid_answers(messages, fields, model, api_key, temperature=1.0, seed=None):
     for _ in range(MAX_RETRIES):
-        text = openrouter.complete(messages, model, api_key)
+        text = openrouter.complete(messages, model, api_key, temperature, seed)
         cleaned, errors = _validate(_parse_json(text), fields)
         if not errors:
             return text, cleaned
