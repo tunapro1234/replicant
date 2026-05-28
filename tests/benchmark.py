@@ -45,13 +45,8 @@ MODELS = [
     "z-ai/glm-4.7-flash",
 ]
 
-from replicant.personas.big5.big5scaler import build_prompt as big5scaler
-
 PERSONAS = {
     "baseline": "",
-    "big5scaler_agree_8": big5scaler(E=5, A=8, C=5, N=2, O=5),
-    "big5scaler_agree_5": big5scaler(E=5, A=5, C=5, N=5, O=5),
-    "big5scaler_agree_2": big5scaler(E=5, A=2, C=5, N=8, O=5),
 }
 
 
