@@ -64,21 +64,45 @@ docker compose up -d
 # 2. set your OpenRouter key
 export OPEN_ROUTER_API_KEY=sk-or-...
 
-# 3. run the end-to-end demo: sample a population → personas → dictator game
+# 3a. quick API demo: sample a population → personas → dictator game
 python tests/run_experiment.py --n 6
+
+# 3b. or run a full, reproducible experiment from a config file
+python -m replicant.experiment tests/configs/dictator_personas.json
 ```
 
-In code:
+A config defines the whole experiment as data (DESIGN.md #5):
+
+```json
+{
+  "experiment": "dictator_personas", "model": "google/gemma-4-31b-it",
+  "reps": 5, "seed": 42, "temperature": 1.0,
+  "cells": [
+    {"game": "dictator", "persona": {"family": "baseline"}},
+    {"game": "dictator", "persona": {"family": "economics", "key": "self_interested"}},
+    {"game": "dictator", "persona": {"family": "big5", "spec": {"E":2,"A":1,"C":3,"N":4,"O":3}}}
+  ]
+}
+```
+
+Running it writes `results/<experiment>/`:
+
+- **`results.json`** — full provenance (git commit, model, temp, seed, version,
+  cost, date) + every raw transcript. Reproducible, never lossy.
+- **`data.csv`** — tidy, one row per repetition → straight into pandas/R.
+- **`methods.txt`** — paper-ready sentences:
+  *"Across 5 repetitions, agents with persona 'self_interested' played dictator
+  on google/gemma-4-31b-it (temperature=1.0, seed 42+) … Mean offer_pct = 0.0
+  (95% CI […]), vs human baseline 28.35% (Engel (2011) meta-analysis)."*
+
+Or drive it from Python — each cell is repeated N times and summarized with a
+human baseline:
 
 ```python
-from replicant.sampling import big5
-from replicant.personas.big5 import personallm
-from replicant.runners.otree import run_batch
-
-specs    = big5.sample(n=6, seed=42)           # [{E,A,C,N,O}, ...] on 1-5
-personas = [personallm(**s) for s in specs]    # spec → persona string
-results  = run_batch("http://localhost:8000", "dictator", 6, personas,
-                     "google/gemma-4-31b-it")
+from replicant.experiment import run_cell
+cell = run_cell("dictator", persona="", model="google/gemma-4-31b-it", reps=5, seed=42)
+print(cell["summary"])    # {n, mean, sd, sem, ci95_low, ci95_high}
+print(cell["baseline"])   # {value: 28.35, source: "Engel (2011) ...", ...}
 ```
 
 Or a single agent on any participant URL:
@@ -96,6 +120,12 @@ result = play(participant_url, persona="", model="google/gemma-4-31b-it")
 | big5 | PersonaLLM | [arXiv:2305.02547](https://arxiv.org/abs/2305.02547) | `{E,A,C,N,O}` |
 | economics | Homo Silicus | [arXiv:2301.07543](https://arxiv.org/abs/2301.07543) | theory category |
 | edsl | Expected Parrot Agent | [github](https://github.com/expectedparrot/edsl) | trait dict |
+
+## Design
+
+This is research software — built around reproducibility, provenance, raw-data
+preservation, N-not-n=1 statistics, cited baselines, and tidy export. The
+guiding principles are in [DESIGN.md](DESIGN.md).
 
 ## Notes
 
