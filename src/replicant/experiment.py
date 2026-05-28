@@ -20,7 +20,8 @@ REST_KEY = "test-rest-key"
 def run_cell(game: str, persona: str, model: str, reps: int = 5,
              server: str = SERVER, api_key: str = None,
              temperature: float = 1.0, seed: int = None,
-             rest_key: str = REST_KEY, runner=None) -> dict:
+             rest_key: str = REST_KEY, runner=None,
+             persona_label: str = "persona") -> dict:
     """Run one (game, persona, model) cell `reps` times and summarize.
 
     Args:
@@ -50,7 +51,10 @@ def run_cell(game: str, persona: str, model: str, reps: int = 5,
     return {
         "game": game,
         "model": model,
+        "persona": persona_label,
         "reps": reps,
+        "temperature": temperature,
+        "seed": seed,
         "metric": spec["metric"],
         "label": spec["label"],
         "values": values,

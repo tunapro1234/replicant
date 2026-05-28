@@ -87,6 +87,32 @@ def test_experiment_run_cell_with_fake_runner():
     assert cell["baseline"]["value"] == 28.35
 
 
+def test_report_csv_and_methods(tmp_path):
+    from replicant.experiment import run_cell
+    from replicant import report
+
+    def fake(server, game, n, personas, model, rest_key, temperature, seed):
+        return [{"agent": "bot_1", "log": [{"answers": {"kept": 60}}]}]
+
+    cell = run_cell("dictator", "", "fake/model", reps=3, seed=42,
+                    runner=fake, persona_label="selfish")
+
+    rows = report.to_rows([cell])
+    assert len(rows) == 3
+    assert rows[0]["game"] == "dictator" and rows[0]["persona"] == "selfish"
+    assert rows[0]["seed"] == 42 and rows[1]["seed"] == 43  # seed+i
+    assert rows[0]["baseline_source"].startswith("Engel")
+
+    path = report.export_csv([cell], str(tmp_path / "out.csv"))
+    assert path.endswith(".csv")
+    with open(path) as f:
+        assert "game,model,persona" in f.read()
+
+    sentence = report.methods_section(cell)
+    assert "dictator" in sentence and "fake/model" in sentence
+    assert "human baseline 28.35%" in sentence
+
+
 def test_provenance_and_save(tmp_path):
     from replicant.results import provenance, save
     meta = provenance("m", temperature=1.0, seed=7, cost_usd=0.01, persona="x")
