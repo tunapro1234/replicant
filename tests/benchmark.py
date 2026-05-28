@@ -8,6 +8,7 @@ Usage:
 """
 
 import argparse
+import hashlib
 import json
 import os
 import sys
@@ -37,10 +38,20 @@ GAMES = {
 
 MODELS = [
     "google/gemma-4-31b-it",
+    "meta-llama/llama-3-8b-instruct",
+    "mistralai/mistral-small-3.2-24b-instruct",
+    "microsoft/phi-4-mini-instruct",
+    "minimax/minimax-m2.5:free",
+    "z-ai/glm-4.7-flash",
 ]
+
+from replicant.personas.big5.big5scaler import build_prompt as big5scaler
 
 PERSONAS = {
     "baseline": "",
+    "big5scaler_agree_8": big5scaler(E=5, A=8, C=5, N=2, O=5),
+    "big5scaler_agree_5": big5scaler(E=5, A=5, C=5, N=5, O=5),
+    "big5scaler_agree_2": big5scaler(E=5, A=2, C=5, N=8, O=5),
 }
 
 
@@ -87,13 +98,47 @@ def extract_metric(game, results):
     return {"raw": decisions}
 
 
-def run_benchmark(games, models, personas, api_key):
+CACHE_DIR = os.path.join(os.path.dirname(__file__), "benchmark_cache")
+
+
+def _cache_key(game, model, persona_name):
+    key = f"{game}|{model}|{persona_name}"
+    return hashlib.md5(key.encode()).hexdigest()
+
+
+def _cache_get(game, model, persona_name):
+    path = os.path.join(CACHE_DIR, f"{_cache_key(game, model, persona_name)}.json")
+    if os.path.exists(path):
+        with open(path) as f:
+            return json.load(f)
+    return None
+
+
+def _cache_set(game, model, persona_name, entry):
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    path = os.path.join(CACHE_DIR, f"{_cache_key(game, model, persona_name)}.json")
+    with open(path, "w") as f:
+        json.dump(entry, f, indent=2, default=str)
+
+
+def run_benchmark(games, models, personas, api_key, no_cache=False):
     results = []
 
     for game in games:
         n = GAMES[game]["n"]
         for model in models:
             for persona_name, persona_text in personas.items():
+                cached = None if no_cache else _cache_get(game, model, persona_name)
+                if cached:
+                    print(f"\n--- {game} | {model} | {persona_name} --- (cached)")
+                    results.append(cached)
+                    h = HUMAN.get(game, {})
+                    metric_key = h.get("metric")
+                    if metric_key and metric_key in cached.get("metrics", {}):
+                        val = cached["metrics"][metric_key]
+                        print(f"  {h['label']}: {val:.1f}% (human: {h['human']}%)")
+                    continue
+
                 print(f"\n--- {game} | {model} | {persona_name} ---")
                 try:
                     raw = run_batch(SERVER, game, n,
@@ -106,8 +151,8 @@ def run_benchmark(games, models, personas, api_key):
                         "metrics": metrics,
                     }
                     results.append(entry)
+                    _cache_set(game, model, persona_name, entry)
 
-                    # Print quick result
                     h = HUMAN.get(game, {})
                     metric_key = h.get("metric")
                     if metric_key and metric_key in metrics:
@@ -155,6 +200,7 @@ def main():
     parser.add_argument("--games", nargs="+", default=list(GAMES.keys()))
     parser.add_argument("--models", nargs="+", default=MODELS)
     parser.add_argument("--output", default="tests/benchmark_results.json")
+    parser.add_argument("--no-cache", action="store_true")
     args = parser.parse_args()
 
     api_key = os.environ.get("OPEN_ROUTER_API_KEY", "")
@@ -163,7 +209,7 @@ def main():
         sys.exit(1)
 
     openrouter.reset_cost()
-    results = run_benchmark(args.games, args.models, PERSONAS, api_key)
+    results = run_benchmark(args.games, args.models, PERSONAS, api_key, no_cache=args.no_cache)
     cost = openrouter.get_cost()
 
     print_summary(results)

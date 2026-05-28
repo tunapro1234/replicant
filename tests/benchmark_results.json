@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-27T19:15:50.472576",
+  "timestamp": "2026-05-28T12:28:35.860689",
   "cost_usd": 0.0,
   "results": [
     {
@@ -16,53 +16,196 @@
       }
     },
     {
-      "game": "prisoner",
+      "game": "dictator",
       "model": "google/gemma-4-31b-it",
-      "persona": "baseline",
+      "persona": "big5scaler_agree_8",
       "metrics": {
-        "cooperation_rate": 100.0,
+        "mean_offer_pct": 50.0,
         "raw": {
           "bot_1": {
-            "cooperate": "True"
-          },
-          "bot_2": {
-            "cooperate": "True"
+            "kept": 50
           }
         }
       }
     },
     {
-      "game": "trust",
+      "game": "dictator",
       "model": "google/gemma-4-31b-it",
-      "persona": "baseline",
+      "persona": "big5scaler_agree_5",
       "metrics": {
+        "mean_offer_pct": 50.0,
         "raw": {
           "bot_1": {
-            "sent_amount": 10
-          },
-          "bot_2": {
-            "sent_back_amount": "15"
+            "kept": 50
           }
-        },
-        "mean_sent_pct": 100.0,
-        "mean_returned_pct": 50.0
+        }
       }
     },
     {
-      "game": "public_goods",
+      "game": "dictator",
       "model": "google/gemma-4-31b-it",
-      "persona": "baseline",
+      "persona": "big5scaler_agree_2",
       "metrics": {
-        "mean_contribution_pct": 100.0,
+        "mean_offer_pct": 0.0,
         "raw": {
           "bot_1": {
-            "contribution": 100
-          },
-          "bot_2": {
-            "contribution": 100
-          },
-          "bot_3": {
-            "contribution": 100
+            "kept": 100
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "meta-llama/llama-3-8b-instruct",
+      "persona": "baseline",
+      "metrics": {
+        "mean_offer_pct": 50.0,
+        "raw": {
+          "bot_1": {
+            "kept": 50
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "meta-llama/llama-3-8b-instruct",
+      "persona": "big5scaler_agree_8",
+      "metrics": {
+        "mean_offer_pct": 30.0,
+        "raw": {
+          "bot_1": {
+            "kept": 70
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "meta-llama/llama-3-8b-instruct",
+      "persona": "big5scaler_agree_5",
+      "metrics": {
+        "mean_offer_pct": 50.0,
+        "raw": {
+          "bot_1": {
+            "kept": 50
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "meta-llama/llama-3-8b-instruct",
+      "persona": "big5scaler_agree_2",
+      "metrics": {
+        "mean_offer_pct": 20.0,
+        "raw": {
+          "bot_1": {
+            "kept": 80
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "mistralai/mistral-small-3.2-24b-instruct",
+      "persona": "baseline",
+      "metrics": {
+        "mean_offer_pct": 50.0,
+        "raw": {
+          "bot_1": {
+            "kept": 50
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "mistralai/mistral-small-3.2-24b-instruct",
+      "persona": "big5scaler_agree_8",
+      "metrics": {
+        "mean_offer_pct": 50.0,
+        "raw": {
+          "bot_1": {
+            "kept": 50
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "mistralai/mistral-small-3.2-24b-instruct",
+      "persona": "big5scaler_agree_5",
+      "metrics": {
+        "mean_offer_pct": 50.0,
+        "raw": {
+          "bot_1": {
+            "kept": 50
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "mistralai/mistral-small-3.2-24b-instruct",
+      "persona": "big5scaler_agree_2",
+      "metrics": {
+        "mean_offer_pct": 30.0,
+        "raw": {
+          "bot_1": {
+            "kept": 70
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "microsoft/phi-4-mini-instruct",
+      "persona": "baseline",
+      "metrics": {
+        "mean_offer_pct": 60.0,
+        "raw": {
+          "bot_1": {
+            "kept": 40
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "microsoft/phi-4-mini-instruct",
+      "persona": "big5scaler_agree_8",
+      "metrics": {
+        "mean_offer_pct": 70.0,
+        "raw": {
+          "bot_1": {
+            "kept": 30
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "microsoft/phi-4-mini-instruct",
+      "persona": "big5scaler_agree_5",
+      "metrics": {
+        "mean_offer_pct": 70.0,
+        "raw": {
+          "bot_1": {
+            "kept": 30
+          }
+        }
+      }
+    },
+    {
+      "game": "dictator",
+      "model": "microsoft/phi-4-mini-instruct",
+      "persona": "big5scaler_agree_2",
+      "metrics": {
+        "mean_offer_pct": 70.0,
+        "raw": {
+          "bot_1": {
+            "kept": 30
           }
         }
       }
