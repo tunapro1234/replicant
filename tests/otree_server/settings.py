@@ -3,6 +3,18 @@ from os import environ
 
 SESSION_CONFIGS = [
     dict(
+        name='charness_rabin',
+        display_name="Charness & Rabin 2002 — Allocation Games",
+        app_sequence=['charness_rabin'],
+        num_demo_participants=1,
+    ),
+    dict(
+        name='kahneman_fairness',
+        display_name="Kahneman et al. 1986 — Price Fairness",
+        app_sequence=['kahneman_fairness'],
+        num_demo_participants=1,
+    ),
+    dict(
         name='ertan2009',
         display_name="Ertan et al. 2009 — Who to Punish?",
         app_sequence=['ertan2009'],

@@ -1,0 +1,10 @@
+{{ block title }}Results{{ endblock }}
+
+{{ block content }}
+<p>Your choices across all rounds:</p>
+<ul>
+{{ for c in choices }}
+    <li>Round {{ c.round }} ({{ c.name }}): {{ c.choice }}</li>
+{{ endfor }}
+</ul>
+{{ endblock }}

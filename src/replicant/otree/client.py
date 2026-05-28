@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from urllib.parse import urlparse, urljoin
 
 import requests
+from bs4 import BeautifulSoup
 
 
 # ── Page data structures ────────────────────────────────────────────
@@ -269,31 +270,53 @@ def _find_title(html: str) -> str:
 
 
 def _extract_body_text(html: str) -> str:
-    """Extract readable text from the page, focusing on the content area."""
-    content = html
+    """Extract clean, structured text from an oTree page using BeautifulSoup."""
+    soup = BeautifulSoup(html, 'html.parser')
 
-    # Try to narrow to the form / content area
-    for pattern in [
-        r'class=["\'][^"\']*otree-body[^"\']*["\'][^>]*>(.*)',
-        r'<form[^>]*>(.*?)</form>',
-    ]:
-        m = re.search(pattern, content, re.DOTALL)
-        if m:
-            content = m.group(1)
-            break
+    # Remove debug panel, scripts, styles, powered-by footer
+    for sel in ['div.debug-info', 'script', 'style', 'div.powered-by-otree',
+                'input[type="hidden"]', 'meta']:
+        for tag in soup.select(sel):
+            tag.decompose()
 
-    # Strip non-content elements
-    content = re.sub(r'<script[^>]*>.*?</script>', '', content, flags=re.DOTALL)
-    content = re.sub(r'<style[^>]*>.*?</style>', '', content, flags=re.DOTALL)
-    content = re.sub(r'<input[^>]+type=["\']hidden["\'][^>]*>', '', content)
-    content = re.sub(r'<button[^>]*>.*?</button>', '', content, flags=re.DOTALL)
+    parts = []
 
-    # Tags → spaces, then clean up
-    content = re.sub(r'<[^>]+>', ' ', content)
-    for entity, char in [('&amp;','&'), ('&lt;','<'), ('&gt;','>'),
-                         ('&nbsp;',' '), ('&#39;',"'"), ('&quot;','"')]:
-        content = content.replace(entity, char)
-    return re.sub(r'\s+', ' ', content).strip()
+    # Page title
+    title = soup.select_one('h2.otree-title')
+    if title:
+        parts.append(title.get_text(strip=True))
+        title.decompose()
+
+    # Content block (where the actual experiment text lives)
+    content = soup.select_one('div.otree-content')
+    if not content:
+        content = soup.select_one('div.otree-body')
+    if not content:
+        content = soup
+
+    # Remove form input elements (we extract those separately as FormFields)
+    for tag in content.select('button.otree-btn-next, div._formfield'):
+        tag.decompose()
+
+    # Instructions card
+    instructions = content.select_one('div.card')
+    instr_text = ""
+    if instructions:
+        instr_text = instructions.get_text(separator=' ', strip=True)
+        # Remove the "Instructions" heading if present
+        instr_text = re.sub(r'^Instructions\s*', '', instr_text).strip()
+        instructions.decompose()
+
+    # Main body text (whatever is left in the content block)
+    body = content.get_text(separator=' ', strip=True)
+    body = re.sub(r'\s+', ' ', body).strip()
+    if body:
+        parts.append(body)
+
+    if instr_text:
+        parts.append(f"Instructions: {instr_text}")
+
+    return "\n\n".join(parts)
 
 
 def _extract_form_fields(html: str) -> list[FormField]:
@@ -408,13 +431,36 @@ def _find_radio_label(html: str, name: str, value: str) -> str | None:
     """Find display text for a specific radio option."""
     escaped_name = re.escape(name)
     escaped_val = re.escape(value)
-    # Label wrapping the radio input
-    pattern = (
+
+    # Pattern 1: <label><input>text</label> (label wrapping input)
+    m = re.search(
         rf'<label[^>]*>\s*<input[^>]+name=["\']{ escaped_name }["\']'
-        rf'[^>]+value=["\']{ escaped_val }["\'][^>]*>\s*([^<]+)</label>'
+        rf'[^>]+value=["\']{ escaped_val }["\'][^>]*>\s*([^<]+)</label>',
+        html, re.DOTALL,
     )
-    m = re.search(pattern, html, re.DOTALL)
-    return m.group(1).strip() if m else None
+    if m:
+        return m.group(1).strip()
+
+    # Pattern 2: <input id="X" value="V"> <label for="X">text</label> (sibling)
+    id_match = re.search(
+        rf'<input[^>]+name=["\']{ escaped_name }["\'][^>]+value=["\']{ escaped_val }["\'][^>]+id=["\']([^"\']+)["\']',
+        html,
+    )
+    if not id_match:
+        id_match = re.search(
+            rf'<input[^>]+id=["\']([^"\']+)["\'][^>]+name=["\']{ escaped_name }["\'][^>]+value=["\']{ escaped_val }["\']',
+            html,
+        )
+    if id_match:
+        input_id = re.escape(id_match.group(1))
+        label_match = re.search(
+            rf'<label[^>]+for=["\']{ input_id }["\'][^>]*>([^<]+)</label>',
+            html,
+        )
+        if label_match:
+            return label_match.group(1).strip()
+
+    return None
 
 
 def _attr(tag: str, name: str) -> str | None:
