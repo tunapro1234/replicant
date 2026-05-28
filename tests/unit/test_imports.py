@@ -57,6 +57,36 @@ def test_big5_sampler_is_seeded():
     assert big5.sample(n=2, seed=1) == big5.sample(n=2, seed=1)
 
 
+def test_stats_summarize():
+    from replicant.stats import summarize
+    s = summarize([10, 20, 30, 40, 50])
+    assert s["n"] == 5 and s["mean"] == 30
+    assert s["ci95_low"] < 30 < s["ci95_high"]
+    assert summarize([])["n"] == 0
+    assert summarize([42])["mean"] == 42 and summarize([42])["sd"] is None
+
+
+def test_games_registry():
+    from replicant.games import GAMES
+    assert "dictator" in GAMES and GAMES["dictator"]["baseline"]["value"] == 28.35
+    # extractor pulls offer from a fake dictator run
+    fake = [{"agent": "bot_1", "log": [{"answers": {"kept": 70}}]}]
+    assert GAMES["dictator"]["extract"](fake) == 30.0
+    assert "source" in GAMES["dictator"]["baseline"]
+
+
+def test_experiment_run_cell_with_fake_runner():
+    from replicant.experiment import run_cell
+    # fake runner: bot_1 always keeps 60 -> offer 40
+    def fake(server, game, n, personas, model, rest_key, temperature, seed):
+        return [{"agent": "bot_1", "log": [{"answers": {"kept": 60}}]}]
+    cell = run_cell("dictator", "", "fake-model", reps=3, runner=fake)
+    assert cell["reps"] == 3
+    assert cell["values"] == [40.0, 40.0, 40.0]
+    assert cell["summary"]["mean"] == 40.0
+    assert cell["baseline"]["value"] == 28.35
+
+
 def test_provenance_and_save(tmp_path):
     from replicant.results import provenance, save
     meta = provenance("m", temperature=1.0, seed=7, cost_usd=0.01, persona="x")
