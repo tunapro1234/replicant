@@ -22,3 +22,6 @@ build/
 # Benchmark / sweep caches (generated)
 tests/benchmark_cache/
 tests/sweep_cache/
+
+# Generated experiment outputs
+results/

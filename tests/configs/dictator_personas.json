@@ -1,0 +1,14 @@
+{
+  "experiment": "dictator_personas",
+  "model": "google/gemma-4-31b-it",
+  "reps": 5,
+  "seed": 42,
+  "temperature": 1.0,
+  "server": "http://localhost:8000",
+  "cells": [
+    {"game": "dictator", "persona": {"family": "baseline"}},
+    {"game": "dictator", "persona": {"family": "economics", "key": "self_interested"}},
+    {"game": "dictator", "persona": {"family": "economics", "key": "inequity_averse"}},
+    {"game": "dictator", "persona": {"family": "big5", "spec": {"E": 2, "A": 1, "C": 3, "N": 4, "O": 3}}}
+  ]
+}

@@ -70,8 +70,8 @@ def methods_section(cell: dict) -> str:
 
 def summary_table(cells: list[dict]) -> str:
     """Human-readable console table of cells vs baselines."""
-    lines = [f"{'game':<16}{'model':<28}{'persona':<14}{'mean':<18}{'human':<8}"]
-    lines.append("-" * 84)
+    lines = [f"{'game':<16}{'model':<28}{'persona':<20}{'mean':<18}{'human':<8}"]
+    lines.append("-" * 90)
     for c in cells:
         s = c["summary"]
         mean = s.get("mean")
@@ -84,6 +84,6 @@ def summary_table(cells: list[dict]) -> str:
         b = (c.get("baseline") or {}).get("value")
         b_txt = f"{b}%" if b is not None else "—"
         model = c["model"].split("/")[-1][:26]
-        lines.append(f"{c['game']:<16}{model:<28}{c.get('persona','?'):<14}"
+        lines.append(f"{c['game']:<16}{model:<28}{c.get('persona','?'):<20}"
                      f"{mean_txt:<18}{b_txt:<8}")
     return "\n".join(lines)

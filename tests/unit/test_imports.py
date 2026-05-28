@@ -78,7 +78,7 @@ def test_games_registry():
 def test_experiment_run_cell_with_fake_runner():
     from replicant.experiment import run_cell
     # fake runner: bot_1 always keeps 60 -> offer 40
-    def fake(server, game, n, personas, model, rest_key, temperature, seed):
+    def fake(server, game, n, personas, model, api_key=None, rest_key=None, temperature=1.0, seed=None):
         return [{"agent": "bot_1", "log": [{"answers": {"kept": 60}}]}]
     cell = run_cell("dictator", "", "fake-model", reps=3, runner=fake)
     assert cell["reps"] == 3
@@ -91,7 +91,7 @@ def test_report_csv_and_methods(tmp_path):
     from replicant.experiment import run_cell
     from replicant import report
 
-    def fake(server, game, n, personas, model, rest_key, temperature, seed):
+    def fake(server, game, n, personas, model, api_key=None, rest_key=None, temperature=1.0, seed=None):
         return [{"agent": "bot_1", "log": [{"answers": {"kept": 60}}]}]
 
     cell = run_cell("dictator", "", "fake/model", reps=3, seed=42,
@@ -111,6 +111,42 @@ def test_report_csv_and_methods(tmp_path):
     sentence = report.methods_section(cell)
     assert "dictator" in sentence and "fake/model" in sentence
     assert "human baseline 28.35%" in sentence
+
+
+def test_persona_resolve():
+    from replicant.personas.resolve import resolve, label
+    assert resolve({"family": "baseline"})
+    assert resolve({"family": "economics", "key": "self_interested"}) == \
+        "You only care about your own pay-off"
+    assert resolve({"family": "big5", "spec": {"E": 4, "A": 1, "C": 3, "N": 4, "O": 3}}) \
+        .startswith("You are a character who is")
+    assert label({"family": "economics", "key": "self_interested"}) == "self_interested"
+    assert label({"family": "big5", "spec": {"E": 4, "A": 1, "C": 3, "N": 4, "O": 3}}) \
+        == "big5_E+A-C+N+O+"
+
+
+def test_run_config_with_fake_runner(tmp_path):
+    from replicant.experiment import run_config
+    from replicant import config as config_mod
+
+    cfg = config_mod.load("tests/configs/dictator_personas.json")
+    assert cfg["experiment"] == "dictator_personas"
+    assert len(cfg["cells"]) == 4
+
+    def fake(server, game, n, personas, model, api_key=None, rest_key=None, temperature=1.0, seed=None):
+        keep = 20 if "own pay-off" in personas[0] else 50
+        return [{"agent": "bot_1", "log": [{"answers": {"kept": keep}}]}]
+
+    out = run_config(cfg, runner=fake, out_dir=str(tmp_path))
+    assert len(out["cells"]) == 4
+    personas = {c["persona"] for c in out["cells"]}
+    assert "self_interested" in personas and "baseline" in personas
+    # selfish kept 20 -> offer 80; baseline kept 50 -> offer 50
+    selfish = next(c for c in out["cells"] if c["persona"] == "self_interested")
+    assert selfish["summary"]["mean"] == 80.0
+    import os
+    assert os.path.exists(os.path.join(str(tmp_path), "dictator_personas", "data.csv"))
+    assert os.path.exists(os.path.join(str(tmp_path), "dictator_personas", "methods.txt"))
 
 
 def test_provenance_and_save(tmp_path):
