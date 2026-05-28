@@ -55,3 +55,17 @@ def test_big5_family_contract():
 def test_big5_sampler_is_seeded():
     from replicant.sampling import big5
     assert big5.sample(n=2, seed=1) == big5.sample(n=2, seed=1)
+
+
+def test_provenance_and_save(tmp_path):
+    from replicant.results import provenance, save
+    meta = provenance("m", temperature=1.0, seed=7, cost_usd=0.01, persona="x")
+    assert meta["model"] == "m" and meta["seed"] == 7
+    assert "git_commit" in meta and "timestamp" in meta
+    path = save([{"agent": "bot_1", "log": []}], meta, out_dir=str(tmp_path))
+    assert path.endswith(".json")
+    import json
+    with open(path) as f:
+        saved = json.load(f)
+    assert saved["meta"]["persona"] == "x"
+    assert saved["results"][0]["agent"] == "bot_1"
