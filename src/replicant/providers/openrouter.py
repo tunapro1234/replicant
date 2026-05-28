@@ -26,6 +26,9 @@ def complete(messages: list[dict], model: str, api_key: str = None) -> str:
             continue
         r.raise_for_status()
         data = r.json()
+        if "choices" not in data:
+            time.sleep(2 * (attempt + 1))
+            continue
         usage = data.get("usage", {})
         total_cost += float(usage.get("total_cost", 0))
         return data["choices"][0]["message"].get("content", "") or ""
