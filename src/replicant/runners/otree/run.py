@@ -2,8 +2,8 @@ import json
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from .otree.client import OTreeClient, PageData, FormField
-from .providers import openrouter
+from .client import OTreeClient, PageData, FormField
+from ...providers import openrouter
 
 MAX_RETRIES = 5
 
@@ -14,7 +14,7 @@ def play(participant_url: str, persona: str, model: str, api_key: str = None) ->
     log = []
 
     if not persona:
-        from .personas.baseline import build_prompt
+        from ...personas.baseline import build_prompt
         persona = build_prompt()
 
     system = persona + (

@@ -1,90 +1,39 @@
-"""Smoke tests: every public module imports without errors."""
+"""Smoke tests: public modules import without errors and expose their API."""
 
 
 def test_top_level():
     import replicant
     assert hasattr(replicant, "__version__")
-    assert hasattr(replicant, "PersonalityFactory")
-    assert hasattr(replicant, "PaperComparison")
-    assert hasattr(replicant, "build_personality")
-    assert hasattr(replicant, "sample_personalities")
+    assert callable(replicant.play)
+    assert callable(replicant.run_batch)
 
 
-def test_personalities():
-    from replicant.personalities import (
-        PersonalityFactory,
-        PROFILES,
-        POPULATION_NORMS,
-        DOMAINS,
-        SENTENCES,
-        build_description,
-        build_personality,
-        sample_personalities,
-        score_to_weight,
+def test_runner_otree():
+    from replicant.runners.otree import (
+        play, run_batch, OTreeClient, PageData, FormField, OTreeExporter,
     )
-    assert "extraversion" in DOMAINS
-    assert "cooperative" in PROFILES
-    assert "agreeableness" in POPULATION_NORMS
-
-
-def test_personalities_validation():
-    from replicant.personalities import (
-        MINI_IPIP,
-        measure_agent,
-        run_validation,
-    )
-    assert len(MINI_IPIP) == 20
-    assert callable(measure_agent)
-    assert callable(run_validation)
-
-
-def test_otree():
-    from replicant.otree import (
-        OTreeClient, PageData, FormField,
-        LLMBot, FormController, run_bots,
-        HybridSession, OTreeSession, OTreeExporter,
-        parse, translate,
-    )
-    assert all(callable(f) for f in [
-        run_bots, parse, translate,
-    ])
-    # OTreeExporter should be instantiable without a live server
+    assert all(callable(f) for f in [play, run_batch])
     exporter = OTreeExporter("http://localhost:8000", rest_key="test")
     assert exporter.server_url == "http://localhost:8000"
     assert exporter.rest_key == "test"
 
 
-def test_analysis_cost():
-    from replicant.analysis import (
-        estimate_cost, print_estimate, get_pricing, MODEL_PRICING,
+def test_providers():
+    from replicant.providers import complete
+    assert callable(complete)
+
+
+def test_personas():
+    from replicant.personas.baseline import build_prompt as baseline
+    from replicant.personas.economics.homo_silicus_2301_07543 import (
+        ALLOCATION_PERSONAS, build_prompt as homo_silicus,
     )
-    in_, out_ = get_pricing("stepfun/step-3.5-flash")
-    assert in_ > 0 and out_ > 0
+    assert "self_interested" in ALLOCATION_PERSONAS
+    assert baseline()
+    assert homo_silicus("self_interested") == "You only care about your own pay-off"
 
 
-def test_analysis_stats():
-    from replicant.analysis import (
-        mann_whitney, chi_square, cohen_d, sig_marker,
-        compare_means, compare_proportions, print_comparison_header,
-    )
-    assert all(callable(f) for f in [
-        mann_whitney, chi_square, cohen_d,
-        compare_means, compare_proportions, print_comparison_header,
-    ])
-
-
-def test_analysis_comparison():
-    from replicant.analysis import PaperComparison
-    comp = PaperComparison("Test")
-    comp.add_finding("metric", 5.0, "test")
-    comp.compare("metric", 4.5)
-    assert "metric" in comp.findings
-
-
-def test_preflight():
-    from replicant.preflight import (
-        check_api_key, check_model, check_otree_server, PreflightError,
-    )
-    assert callable(check_api_key)
-    assert callable(check_model)
-    assert callable(check_otree_server)
+def test_bfi2_bank():
+    from replicant.personas.big5 import bfi2
+    assert len(bfi2.ITEMS) == 60
+    assert set(bfi2.DOMAINS) == {"E", "A", "C", "N", "O"}

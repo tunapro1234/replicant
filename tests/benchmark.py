@@ -16,7 +16,7 @@ from datetime import datetime
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from replicant.run import run_batch
+from replicant.runners.otree import run_batch
 from replicant.providers import openrouter
 
 SERVER = "http://localhost:8000"
