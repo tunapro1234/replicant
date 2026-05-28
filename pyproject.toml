@@ -1,7 +1,7 @@
 [project]
 name = "pyreplicant"
-version = "0.3.0"
-description = "LLM-based replication framework for behavioral economics experiments"
+version = "0.4.0"
+description = "Run behavioral-economics experiments with LLM agents as subjects"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
@@ -11,11 +11,11 @@ authors = [
 keywords = [
     "behavioral economics",
     "LLM agents",
-    "Big Five personality",
-    "BFI-2",
     "experimental economics",
     "oTree",
     "Homo Silicus",
+    "Big Five",
+    "persona",
     "research",
 ]
 classifiers = [
@@ -32,22 +32,19 @@ classifiers = [
 ]
 dependencies = [
     "requests>=2.31",
-    "httpx>=0.24",
+    "beautifulsoup4>=4.12",
 ]
 
 [project.optional-dependencies]
-analysis = ["pandas>=2.0", "matplotlib>=3.7", "scipy>=1.10"]
+# oTree server (for running the bundled experiment apps locally)
 otree = ["otree>=6.0"]
-all = ["pandas>=2.0", "matplotlib>=3.7", "scipy>=1.10", "otree>=6.0"]
+# EDSL persona builder — note: edsl currently requires Python 3.12
+edsl = ["edsl>=0.1.30"]
 
 [project.urls]
 Homepage = "https://github.com/tunapro1234/replicant"
 Repository = "https://github.com/tunapro1234/replicant"
 Issues = "https://github.com/tunapro1234/replicant/issues"
-Changelog = "https://github.com/tunapro1234/replicant/blob/stable/CHANGELOG.md"
-
-[project.scripts]
-replicant-otree = "replicant.otree.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

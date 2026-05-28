@@ -38,14 +38,21 @@ TEMPERATURE = 0.7
 STORY_PROMPT = "Please share a personal story in 800 words. Do not explicitly mention your personality traits in the story."
 
 
-def build_prompt(E=True, A=True, C=True, N=True, O=True) -> str:
-    """Build persona system prompt from binary trait assignments.
+def build_prompt(E=3.0, A=3.0, C=3.0, N=3.0, O=3.0) -> str:
+    """Build persona system prompt from a big5 spec (each trait 1-5).
 
-    Args: True = high trait, False = low trait.
+    PersonaLLM is binary, so scores are thresholded: >= 3.0 -> high pole,
+    < 3.0 -> low pole. This lets the same {E,A,C,N,O} spec the sampler
+    produces drive both PersonaLLM and (future) continuous methods.
+
     Returns: "You are a character who is [t1], [t2], [t3], [t4], and [t5]."
     """
+    return _prompt_from_bools(E >= 3.0, A >= 3.0, C >= 3.0, N >= 3.0, O >= 3.0)
+
+
+def _prompt_from_bools(e, a, c, n, o) -> str:
     words = []
-    for trait, val in [("E", E), ("A", A), ("C", C), ("N", N), ("O", O)]:
+    for trait, val in [("E", e), ("A", a), ("C", c), ("N", n), ("O", o)]:
         high, low = TRAIT_PAIRS[trait]
         words.append(high if val else low)
     return f"You are a character who is {', '.join(words[:-1])}, and {words[-1]}."
@@ -62,7 +69,7 @@ def all_personas() -> list[dict]:
             for c in [True, False]:
                 for n in [True, False]:
                     for o in [True, False]:
-                        prompt = build_prompt(E=e, A=a, C=c, N=n, O=o)
+                        prompt = _prompt_from_bools(e, a, c, n, o)
                         label = "".join([
                             "E+" if e else "E-",
                             "A+" if a else "A-",

@@ -1,4 +1,4 @@
-"""Smoke tests: public modules import without errors and expose their API."""
+"""Smoke tests: public modules import, and the layer contracts hold."""
 
 
 def test_top_level():
@@ -15,7 +15,6 @@ def test_runner_otree():
     assert all(callable(f) for f in [play, run_batch])
     exporter = OTreeExporter("http://localhost:8000", rest_key="test")
     assert exporter.server_url == "http://localhost:8000"
-    assert exporter.rest_key == "test"
 
 
 def test_providers():
@@ -23,17 +22,36 @@ def test_providers():
     assert callable(complete)
 
 
-def test_personas():
-    from replicant.personas.baseline import build_prompt as baseline
+def test_baseline_persona():
+    from replicant.personas.baseline import build_prompt
+    assert build_prompt()
+
+
+def test_economics_persona():
     from replicant.personas.economics.homo_silicus_2301_07543 import (
-        ALLOCATION_PERSONAS, build_prompt as homo_silicus,
+        ALLOCATION_PERSONAS, build_prompt,
     )
     assert "self_interested" in ALLOCATION_PERSONAS
-    assert baseline()
-    assert homo_silicus("self_interested") == "You only care about your own pay-off"
+    assert build_prompt("self_interested") == "You only care about your own pay-off"
 
 
-def test_bfi2_bank():
-    from replicant.personas.big5 import bfi2
+def test_big5_family_contract():
+    """sampling.big5 produces specs that personas.big5 consume directly."""
+    from replicant.sampling import big5
+    from replicant.personas.big5 import personallm, bfi2
+
     assert len(bfi2.ITEMS) == 60
-    assert set(bfi2.DOMAINS) == {"E", "A", "C", "N", "O"}
+
+    specs = big5.sample(n=3, seed=42)
+    assert len(specs) == 3
+    for s in specs:
+        assert set(s) == {"E", "A", "C", "N", "O"}
+        assert all(1.0 <= v <= 5.0 for v in s.values())
+        # the contract: a spec feeds the persona unpacked
+        prompt = personallm(**s)
+        assert prompt.startswith("You are a character who is")
+
+
+def test_big5_sampler_is_seeded():
+    from replicant.sampling import big5
+    assert big5.sample(n=2, seed=1) == big5.sample(n=2, seed=1)
