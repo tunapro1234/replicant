@@ -38,8 +38,6 @@ dependencies = [
 [project.optional-dependencies]
 # oTree server (for running the bundled experiment apps locally)
 otree = ["otree>=6.0"]
-# EDSL persona builder — note: edsl currently requires Python 3.12
-edsl = ["edsl>=0.1.30"]
 
 [project.urls]
 Homepage = "https://github.com/tunapro1234/replicant"

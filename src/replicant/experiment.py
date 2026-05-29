@@ -67,41 +67,33 @@ def run_cell(game: str, persona: str, model: str, reps: int = 5,
     }
 
 
-def run_config(config: dict, api_key: str = None, runner=None,
-               out_dir: str = None) -> dict:
-    """Run a declarative experiment config and (optionally) persist everything.
+def run_experiment(name: str, cells_spec: list, model: str, reps: int = 5,
+                   seed: int = None, temperature: float = 1.0,
+                   server: str = SERVER, api_key: str = None, runner=None,
+                   out_dir: str = None) -> dict:
+    """Run several cells and (optionally) persist provenance + CSV + methods.
 
-    Config keys: model, reps, seed, temperature, server, experiment (name),
-    and cells = [{game, persona: <spec>}, ...] where <spec> is a persona
-    resolution spec (see personas/resolve.py).
+    Args:
+        name: experiment name (used as the output subdir).
+        cells_spec: list of (game, persona_string, persona_label) tuples.
+        out_dir: if given, writes <out_dir>/<name>/{results.json, data.csv,
+            methods.txt} — full provenance + raw transcripts, tidy CSV, and
+            paper-ready sentences.
 
-    If out_dir is given, writes <out_dir>/<experiment>/{results.json, data.csv,
-    methods.txt} with full provenance + raw transcripts + tidy CSV.
+    Returns: {experiment, cells, cost_usd, [out_dir]}.
     """
-    from .personas.resolve import resolve, label
     from .providers import openrouter
     from . import results as results_mod
     from . import report
 
-    model = config["model"]
-    reps = config.get("reps", 5)
-    seed = config.get("seed")
-    temperature = config.get("temperature", 1.0)
-    server = config.get("server", SERVER)
-    name = config.get("experiment", "experiment")
-
     openrouter.reset_cost()
-    cells = []
-    for cc in config["cells"]:
-        pspec = cc["persona"]
-        cell = run_cell(
-            cc["game"], resolve(pspec), model, reps=reps, server=server,
-            api_key=api_key, temperature=temperature, seed=seed,
-            runner=runner, persona_label=label(pspec),
-        )
-        cells.append(cell)
+    cells = [
+        run_cell(game, persona, model, reps=reps, server=server, api_key=api_key,
+                 temperature=temperature, seed=seed, runner=runner,
+                 persona_label=lbl)
+        for (game, persona, lbl) in cells_spec
+    ]
     cost = openrouter.get_cost()
-
     out = {"experiment": name, "cells": cells, "cost_usd": cost}
 
     if out_dir:
@@ -115,32 +107,3 @@ def run_config(config: dict, api_key: str = None, runner=None,
         out["out_dir"] = exp_dir
 
     return out
-
-
-def main():
-    import argparse
-    import sys
-    from . import config as config_mod
-    from . import report
-
-    parser = argparse.ArgumentParser(
-        description="Run a declarative replicant experiment config.")
-    parser.add_argument("config", help="path to .json/.yaml experiment config")
-    parser.add_argument("--out-dir", default="results")
-    args = parser.parse_args()
-
-    if not os.environ.get("OPEN_ROUTER_API_KEY"):
-        print("Set OPEN_ROUTER_API_KEY")
-        sys.exit(1)
-
-    cfg = config_mod.load(args.config)
-    out = run_config(cfg, out_dir=args.out_dir)
-
-    print(report.summary_table(out["cells"]))
-    print(f"\nCost: ${out['cost_usd']:.4f}")
-    if out.get("out_dir"):
-        print(f"Saved to {out['out_dir']}/ (results.json, data.csv, methods.txt)")
-
-
-if __name__ == "__main__":
-    main()

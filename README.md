@@ -42,12 +42,15 @@ src/replicant/
 ├── sampling/         big5.py            # Big Five population norms → specs
 ├── personas/
 │   ├── baseline/                        # null persona
-│   ├── big5/         bfi2.py            # BFI-2 trait bank (data)
-│   │                 personallm_2305_02547/   # binary adjectives (arXiv:2305.02547)
-│   ├── economics/    homo_silicus_2301_07543/ # theory one-liners (arXiv:2301.07543)
-│   └── edsl/                            # Expected Parrot Agent as a persona builder
+│   ├── big5/         personallm_2305_02547/   # binary adjectives (arXiv:2305.02547)
+│   └── economics/    homo_silicus_2301_07543/ # theory one-liners (arXiv:2301.07543)
+├── games.py          # cited human baselines + metric extractors
+├── stats.py          # mean / 95% CI over repetitions
+├── experiment.py     # run_cell (repeat N times) + run_experiment (+ save)
+├── results.py        # provenance stamp + raw transcript persistence
+├── report.py         # tidy CSV + auto methods-section sentence
 └── runners/
-    └── otree/        run.py, client.py, export.py
+    └── otree/        run.py, client.py
 ```
 
 Persona folders are tagged with the source paper's arXiv id, so the method and
@@ -64,28 +67,12 @@ docker compose up -d
 # 2. set your OpenRouter key
 export OPEN_ROUTER_API_KEY=sk-or-...
 
-# 3a. quick API demo: sample a population → personas → dictator game
-python tests/run_experiment.py --n 6
-
-# 3b. or run a full, reproducible experiment from a config file
-python -m replicant.experiment tests/configs/dictator_personas.json
+# 3. run the demo experiment: a few personas through the dictator game,
+#    each repeated N times, mean +/- 95% CI vs the cited human baseline
+python tests/run_experiment.py --reps 5
 ```
 
-A config defines the whole experiment as data (DESIGN.md #5):
-
-```json
-{
-  "experiment": "dictator_personas", "model": "google/gemma-4-31b-it",
-  "reps": 5, "seed": 42, "temperature": 1.0,
-  "cells": [
-    {"game": "dictator", "persona": {"family": "baseline"}},
-    {"game": "dictator", "persona": {"family": "economics", "key": "self_interested"}},
-    {"game": "dictator", "persona": {"family": "big5", "spec": {"E":2,"A":1,"C":3,"N":4,"O":3}}}
-  ]
-}
-```
-
-Running it writes `results/<experiment>/`:
+This writes `results/dictator_demo/`:
 
 - **`results.json`** — full provenance (git commit, model, temp, seed, version,
   cost, date) + every raw transcript. Reproducible, never lossy.
@@ -95,14 +82,26 @@ Running it writes `results/<experiment>/`:
   on google/gemma-4-31b-it (temperature=1.0, seed 42+) … Mean offer_pct = 0.0
   (95% CI […]), vs human baseline 28.35% (Engel (2011) meta-analysis)."*
 
-Or drive it from Python — each cell is repeated N times and summarized with a
-human baseline:
+Drive it from Python — each cell is repeated N times and summarized vs a human
+baseline:
 
 ```python
 from replicant.experiment import run_cell
 cell = run_cell("dictator", persona="", model="google/gemma-4-31b-it", reps=5, seed=42)
 print(cell["summary"])    # {n, mean, sd, sem, ci95_low, ci95_high}
 print(cell["baseline"])   # {value: 28.35, source: "Engel (2011) ...", ...}
+```
+
+Build the persona however you like — a theory one-liner or a sampled trait spec:
+
+```python
+from replicant.sampling import big5
+from replicant.personas.big5 import personallm
+from replicant.personas.economics.homo_silicus_2301_07543 import ALLOCATION_PERSONAS
+
+theory = ALLOCATION_PERSONAS["self_interested"]   # "You only care about your own pay-off"
+spec   = big5.sample(n=1, seed=42)[0]             # {E,A,C,N,O} from population norms
+sampled = personallm(**spec)                       # -> persona string
 ```
 
 Or a single agent on any participant URL:
@@ -119,7 +118,6 @@ result = play(participant_url, persona="", model="google/gemma-4-31b-it")
 | baseline | null | — | none |
 | big5 | PersonaLLM | [arXiv:2305.02547](https://arxiv.org/abs/2305.02547) | `{E,A,C,N,O}` |
 | economics | Homo Silicus | [arXiv:2301.07543](https://arxiv.org/abs/2301.07543) | theory category |
-| edsl | Expected Parrot Agent | [github](https://github.com/expectedparrot/edsl) | trait dict |
 
 ## Design
 
@@ -132,9 +130,6 @@ guiding principles are in [DESIGN.md](DESIGN.md).
 - **Provider:** all LLM calls go through [OpenRouter](https://openrouter.ai), so
   any model (Gemma, Qwen, GLM, Llama, GPT, Claude, …) works by changing one
   string.
-- **EDSL persona** requires the `edsl` package, which currently needs Python
-  3.12 (see the project `.venv`). It is lazily imported, so the rest of the repo
-  runs without it.
 - **Roadmap:** the provider layer is where LLM-as-subject research will plug in
   — an agentic harness (OpenClaw / Hermes-style) becomes another provider
   without touching the persona, sampling, or runner layers.
