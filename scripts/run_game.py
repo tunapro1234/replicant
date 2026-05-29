@@ -24,9 +24,7 @@ import urllib.request
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from replicant import run_batch
-from replicant.games import GAMES
 from replicant.experiment import run_experiment
-from replicant.report import summary_table
 from replicant.personas.economics.homo_silicus_2301_07543 import (
     ALLOCATION_PERSONAS, POLITICAL_PERSONAS,
 )
@@ -160,25 +158,24 @@ def main():
     n = cfg["num_demo_participants"]
     persona, label = resolve_persona(persona_spec)
 
-    # Repeated, measured experiment: needs a registered metric + baseline.
+    # Repeated run: save raw decisions + transcripts for later analysis.
     if reps > 1:
-        if name not in GAMES:
-            sys.exit(f"--reps needs a game with a registered metric. '{name}' has none "
-                     f"(known: {list(GAMES)}). Use reps=1 for a raw run.")
-        print(f"\n{name} | persona={label} | {reps} reps | temp={temperature} | {model}\n")
+        print(f"\n{name} | persona={label} | {reps} reps | n={n} | "
+              f"temp={temperature} | {model}\n")
         out = run_experiment(f"{name}_{label}", [(name, persona, label)],
-                             model, reps=reps, seed=seed, temperature=temperature,
-                             out_dir="results")
-        print(summary_table(out["cells"]))
-        print(f"\nCost: ${out['cost_usd']:.4f}")
-        print(f"Saved to {out['out_dir']}/")
+                             model, n, reps=reps, seed=seed,
+                             temperature=temperature, out_dir="results")
+        print(f"Saved {reps} reps of raw decisions to {out['out_dir']}/")
+        print(f"  results.json (full transcripts) + data.csv (raw decisions)")
+        print(f"Cost: ${out['cost_usd']:.4f}")
+        print(f"\nAnalyze it with your own script, e.g.:")
+        print(f"  python scripts/analyze_dictator.py --dir {out['out_dir']}")
         return
 
-    # Single quick run.
+    # Single quick run — print the raw decisions.
     print(f"\nRunning '{name}' | persona={label} | {n} agent(s) | {model}...\n")
     results = run_batch(SERVER, name, n, [persona] * n, model,
                         rest_key=REST_KEY, temperature=temperature, seed=seed)
-
     for r in results:
         decisions = {k: v for entry in r.get("log", [])
                      if "answers" in entry for k, v in entry["answers"].items()}
@@ -188,14 +185,6 @@ def main():
             print(f"  {r['agent']}: ERROR — {r['error']}")
         else:
             print(f"  {r['agent']}: (no decision — e.g. a receiver role)")
-
-    if name in GAMES:
-        spec = GAMES[name]
-        value = spec["extract"](results)
-        if value is not None:
-            b = spec["baseline"]
-            print(f"\n  {spec['label']}: {value:.1f}")
-            print(f"  human baseline: {b['value']}  ({b['source']})")
 
 
 if __name__ == "__main__":

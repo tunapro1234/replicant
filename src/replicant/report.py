@@ -1,8 +1,10 @@
 """
-Reporting (DESIGN.md #6, #8): tidy export for analysis tools, plus an
-auto-generated methods-section sentence for the paper.
+Output writing for the simulator: raw decisions -> tidy CSV, plus the running
+experiment index.
 
-Operates on "cells" — the dicts returned by experiment.run_cell.
+No metrics or baselines here — computing offer%, comparing to Engel/KKT, etc.
+is analysis (the researcher's own scripts reading these files), not the
+simulator's job.
 """
 
 import csv
@@ -10,7 +12,54 @@ import json
 import os
 
 
-def list_experiments(out_dir: str = "results") -> list[dict]:
+def _decisions(run: list) -> dict:
+    """One run_batch result -> {agent: {field: value}} of recorded answers."""
+    out = {}
+    for r in run:
+        for entry in r.get("log", []):
+            if "answers" in entry:
+                out.setdefault(r["agent"], {}).update(entry["answers"])
+    return out
+
+
+def to_rows(cells: list) -> list:
+    """Raw long format: one row per (cell, rep, agent, decided field).
+
+    Universal across games — analysis pivots/filters this however it likes.
+    """
+    rows = []
+    for c in cells:
+        base_seed = c.get("seed")
+        for rep, run in enumerate(c["raw_runs"]):
+            for agent, fields in _decisions(run).items():
+                for field, value in fields.items():
+                    rows.append({
+                        "game": c["game"],
+                        "persona": c["persona"],
+                        "model": c["model"],
+                        "rep": rep,
+                        "agent": agent,
+                        "field": field,
+                        "value": value,
+                        "seed": None if base_seed is None else base_seed + rep,
+                        "temperature": c.get("temperature"),
+                    })
+    return rows
+
+
+def export_csv(cells: list, path: str) -> str:
+    """Write raw decisions as tidy long-format CSV (one row per rep/agent/field)."""
+    rows = to_rows(cells)
+    fields = ["game", "persona", "model", "rep", "agent", "field", "value",
+              "seed", "temperature"]
+    with open(path, "w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=fields)
+        w.writeheader()
+        w.writerows(rows)
+    return path
+
+
+def list_experiments(out_dir: str = "results") -> list:
     """Read the running index of every experiment (results/experiments.jsonl)."""
     path = os.path.join(out_dir, "experiments.jsonl")
     if not os.path.exists(path):
@@ -20,99 +69,15 @@ def list_experiments(out_dir: str = "results") -> list[dict]:
 
 
 def print_experiments(out_dir: str = "results") -> None:
-    """Print a compact history: every experiment run, mean vs baseline."""
+    """Print a compact history of every experiment run (what, not results)."""
     runs = list_experiments(out_dir)
     if not runs:
         print(f"No experiments logged in {out_dir}/experiments.jsonl")
         return
-    print(f"{'when':<21}{'experiment':<26}{'persona':<18}{'mean':<8}{'human':<7}{'n':<4}")
+    print(f"{'when':<21}{'experiment':<24}{'game':<16}{'persona':<18}{'reps':<5}")
     print("-" * 84)
     for r in runs:
         when = str(r.get("timestamp", ""))[:19]
         for c in r.get("cells", []):
-            s = c.get("summary", {})
-            mean = s.get("mean")
-            mean_txt = f"{mean:.1f}" if isinstance(mean, (int, float)) else "—"
-            print(f"{when:<21}{r.get('experiment',''):<26}{c.get('persona',''):<18}"
-                  f"{mean_txt:<8}{str(c.get('baseline','')):<7}{s.get('n',''):<4}")
-
-
-def to_rows(cells: list[dict]) -> list[dict]:
-    """Tidy long format: one row per rep. Drops straight into pandas/R."""
-    rows = []
-    for c in cells:
-        b = c.get("baseline") or {}
-        for i, v in enumerate(c["values"]):
-            rows.append({
-                "game": c["game"],
-                "model": c["model"],
-                "persona": c.get("persona", "persona"),
-                "metric": c["metric"],
-                "rep": i,
-                "value": v,
-                "temperature": c.get("temperature"),
-                "seed": (None if c.get("seed") is None else c["seed"] + i),
-                "baseline_value": b.get("value"),
-                "baseline_source": b.get("source"),
-            })
-    return rows
-
-
-def export_csv(cells: list[dict], path: str) -> str:
-    """Write tidy long-format CSV (one row per rep). Returns the path."""
-    rows = to_rows(cells)
-    fields = ["game", "model", "persona", "metric", "rep", "value",
-              "temperature", "seed", "baseline_value", "baseline_source"]
-    with open(path, "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=fields)
-        w.writeheader()
-        w.writerows(rows)
-    return path
-
-
-def methods_section(cell: dict) -> str:
-    """Paper-ready provenance sentence for one cell."""
-    s = cell["summary"]
-    b = cell.get("baseline") or {}
-    n_per_rep = "agents"
-    seed_txt = "unseeded" if cell.get("seed") is None else f"seed {cell['seed']}+"
-    mean = s.get("mean")
-    if mean is None:
-        return (f"{cell['reps']} reps of persona '{cell.get('persona')}' on "
-                f"{cell['model']} ({cell['game']}) produced no usable metric.")
-    ci = ""
-    if s.get("ci95_low") is not None and s.get("sd") is not None:
-        ci = f" (95% CI [{s['ci95_low']:.1f}, {s['ci95_high']:.1f}])"
-    line = (
-        f"Across {cell['reps']} repetitions, agents with persona "
-        f"'{cell.get('persona')}' played {cell['game']} on {cell['model']} "
-        f"(temperature={cell.get('temperature')}, {seed_txt}) via OpenRouter. "
-        f"Mean {cell['metric']} = {mean:.1f}{ci}"
-    )
-    if b.get("value") is not None:
-        line += (f", vs human baseline {b['value']}% "
-                 f"({b.get('source', 'n/a')}).")
-    else:
-        line += "."
-    return line
-
-
-def summary_table(cells: list[dict]) -> str:
-    """Human-readable console table of cells vs baselines."""
-    lines = [f"{'game':<16}{'model':<28}{'persona':<20}{'mean':<18}{'human':<8}"]
-    lines.append("-" * 90)
-    for c in cells:
-        s = c["summary"]
-        mean = s.get("mean")
-        if mean is None:
-            mean_txt = "—"
-        elif s.get("ci95_low") is not None and s.get("sd") is not None:
-            mean_txt = f"{mean:.1f} [{s['ci95_low']:.0f},{s['ci95_high']:.0f}]"
-        else:
-            mean_txt = f"{mean:.1f}"
-        b = (c.get("baseline") or {}).get("value")
-        b_txt = f"{b}%" if b is not None else "—"
-        model = c["model"].split("/")[-1][:26]
-        lines.append(f"{c['game']:<16}{model:<28}{c.get('persona','?'):<20}"
-                     f"{mean_txt:<18}{b_txt:<8}")
-    return "\n".join(lines)
+            print(f"{when:<21}{r.get('experiment', ''):<24}{c.get('game', ''):<16}"
+                  f"{c.get('persona', ''):<18}{c.get('reps', ''):<5}")

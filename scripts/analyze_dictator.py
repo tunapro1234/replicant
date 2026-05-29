@@ -1,12 +1,13 @@
 """
 Analyze a dictator-game experiment.
 
-Reads results/<dir>/data.csv (one row per repetition), summarizes each persona's
-offers against the human baseline, prints a table + an ASCII chart, and — if
-matplotlib is installed — saves PNG plots (mean offer + 95% CI with the human
-baseline line, and a histogram of the offer distribution per persona).
+Reads the simulator's raw output (results/<dir>/data.csv, one row per
+rep/agent/field), turns each dictator decision into an offer (offer = 100 -
+kept), and compares each persona to the human baseline. Prints a table + ASCII
+chart and — if matplotlib is installed — saves PNG plots.
 
-Dictator-specific for now; we'll generalize once we know what other games need.
+This is the RESEARCHER's side: the human baseline lives HERE, not in the
+simulator. Dictator-specific; copy & adapt for other games.
 
 Usage:
     python scripts/analyze_dictator.py
@@ -23,18 +24,19 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from replicant.stats import summarize
 
+# Human baseline — Engel (2011) meta-analysis. Lives in the analysis, not the tool.
+HUMAN = 28.35
+HUMAN_ZERO_PCT = 36.0
+
 
 def load(data_csv):
-    """Return ({persona: [offers]}, human_baseline)."""
+    """Read raw decisions -> {persona: [offers]}. Offer = 100 - kept."""
     offers = defaultdict(list)
-    baseline = 28.35
     with open(data_csv) as f:
         for row in csv.DictReader(f):
-            if row.get("value"):
-                offers[row["persona"]].append(float(row["value"]))
-            if row.get("baseline_value"):
-                baseline = float(row["baseline_value"])
-    return offers, baseline
+            if row.get("field") == "kept" and row.get("value"):
+                offers[row["persona"]].append(100 - float(row["value"]))
+    return offers
 
 
 def ascii_bar(value, lo=0, hi=100, width=40):
@@ -43,7 +45,7 @@ def ascii_bar(value, lo=0, hi=100, width=40):
     return "█" * n + "·" * (width - n)
 
 
-def print_table(offers, baseline):
+def print_table(offers):
     print(f"\n{'persona':<18}{'N':<4}{'mean':<7}{'95% CI':<16}"
           f"{'gave 0%':<9}{'gave 50%':<10}{'gap vs human':<12}")
     print("-" * 76)
@@ -55,22 +57,22 @@ def print_table(offers, baseline):
               if s.get("sd") is not None else "(no spread)")
         zero = 100 * sum(1 for v in vals if v == 0) / n
         fair = 100 * sum(1 for v in vals if v == 50) / n
-        gap = mean - baseline
+        gap = mean - HUMAN
         print(f"{persona:<18}{n:<4}{mean:<7.1f}{ci:<16}"
               f"{zero:<9.0f}{fair:<10.0f}{gap:+.1f}")
-    print(f"\nhuman baseline (Engel 2011): mean offer {baseline}%, "
-          f"~36% give zero")
+    print(f"\nhuman baseline (Engel 2011): mean offer {HUMAN}%, "
+          f"~{HUMAN_ZERO_PCT:.0f}% give zero")
 
 
-def print_ascii_chart(offers, baseline):
+def print_ascii_chart(offers):
     print("\nMean offer (0────────────────────────────────────100):")
     for persona, vals in offers.items():
         m = summarize(vals)["mean"]
         print(f"  {persona:<18}{ascii_bar(m)} {m:.0f}%")
-    print(f"  {'HUMAN (Engel)':<18}{ascii_bar(baseline)} {baseline:.0f}%")
+    print(f"  {'HUMAN (Engel)':<18}{ascii_bar(HUMAN)} {HUMAN:.0f}%")
 
 
-def save_plots(offers, baseline, out_dir):
+def save_plots(offers, out_dir):
     try:
         import matplotlib
         matplotlib.use("Agg")
@@ -92,8 +94,8 @@ def save_plots(offers, baseline, out_dir):
         means.append(s["mean"])
         errs.append(s.get("ci95_margin") or 0)
     ax.bar(personas, means, yerr=errs, capsize=5, color="#4c72b0")
-    ax.axhline(baseline, ls="--", color="crimson",
-               label=f"human (Engel 2011): {baseline}%")
+    ax.axhline(HUMAN, ls="--", color="crimson",
+               label=f"human (Engel 2011): {HUMAN}%")
     ax.set_ylabel("Mean offer (% of pie given)")
     ax.set_title("Dictator game: mean offer by persona")
     ax.set_ylim(0, 100)
@@ -109,7 +111,7 @@ def save_plots(offers, baseline, out_dir):
     bins = range(0, 105, 5)
     for p in personas:
         ax.hist(offers[p], bins=bins, alpha=0.5, label=p)
-    ax.axvline(baseline, ls="--", color="crimson", label=f"human mean {baseline}%")
+    ax.axvline(HUMAN, ls="--", color="crimson", label=f"human mean {HUMAN}%")
     ax.set_xlabel("Offer (% of pie given)")
     ax.set_ylabel("Count (reps)")
     ax.set_title("Dictator game: offer distribution by persona")
@@ -133,10 +135,12 @@ def main():
     if not os.path.exists(data_csv):
         sys.exit(f"No data.csv in {args.dir}. Run an experiment first.")
 
-    offers, baseline = load(data_csv)
-    print_table(offers, baseline)
-    print_ascii_chart(offers, baseline)
-    save_plots(offers, baseline, args.dir)
+    offers = load(data_csv)
+    if not offers:
+        sys.exit(f"No dictator 'kept' decisions in {data_csv}.")
+    print_table(offers)
+    print_ascii_chart(offers)
+    save_plots(offers, args.dir)
 
 
 if __name__ == "__main__":

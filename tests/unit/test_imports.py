@@ -61,69 +61,60 @@ def test_stats_summarize():
     assert summarize([42])["mean"] == 42 and summarize([42])["sd"] is None
 
 
-def test_games_registry():
-    from replicant.games import GAMES
-    assert "dictator" in GAMES and GAMES["dictator"]["baseline"]["value"] == 28.35
-    fake = [{"agent": "bot_1", "log": [{"answers": {"kept": 70}}]}]
-    assert GAMES["dictator"]["extract"](fake) == 30.0
-    assert "source" in GAMES["dictator"]["baseline"]
-
-
 # A fake runner lets us test the harness end-to-end without any API calls.
 def _fake_runner(server, game, n, personas, model,
                  api_key=None, rest_key=None, temperature=1.0, seed=None):
     keep = 20 if "own pay-off" in personas[0] else 50
-    return [{"agent": "bot_1", "log": [{"answers": {"kept": keep}}]}]
+    return [{"agent": "bot_1",
+             "log": [{"answers": {"kept": keep}}],
+             "messages": [{"role": "system", "content": "..."}]}]
 
 
-def test_experiment_run_cell():
+def test_experiment_run_cell_is_raw():
+    """run_cell records raw runs only — no metric, no summary, no baseline."""
     from replicant.experiment import run_cell
-    cell = run_cell("dictator", "", "fake-model", reps=3, runner=_fake_runner)
-    assert cell["reps"] == 3
-    assert cell["values"] == [50.0, 50.0, 50.0]   # baseline keeps 50 -> offer 50
-    assert cell["summary"]["mean"] == 50.0
-    assert cell["baseline"]["value"] == 28.35
+    cell = run_cell("dictator", "", "fake-model", n=2, reps=3, runner=_fake_runner)
+    assert cell["reps"] == 3 and cell["n"] == 2
+    assert len(cell["raw_runs"]) == 3
+    assert "summary" not in cell and "baseline" not in cell and "metric" not in cell
+    # the raw decision is recoverable
+    assert cell["raw_runs"][0][0]["log"][0]["answers"]["kept"] == 50
 
 
-def test_run_experiment_saves(tmp_path):
+def test_run_experiment_saves_raw(tmp_path):
+    import csv
+    import os
     from replicant.experiment import run_experiment
     cells_spec = [
         ("dictator", "", "baseline"),
         ("dictator", "You only care about your own pay-off", "selfish"),
     ]
-    out = run_experiment("t", cells_spec, "fake/model", reps=2, seed=42,
+    out = run_experiment("t", cells_spec, "fake/model", n=2, reps=2, seed=42,
                          runner=_fake_runner, out_dir=str(tmp_path))
     assert len(out["cells"]) == 2
-    selfish = next(c for c in out["cells"] if c["persona"] == "selfish")
-    assert selfish["summary"]["mean"] == 80.0   # keeps 20 -> offer 80
-    import os
-    assert os.path.exists(os.path.join(str(tmp_path), "t", "data.csv"))
-    assert os.path.exists(os.path.join(str(tmp_path), "t", "methods.txt"))
     assert os.path.exists(os.path.join(str(tmp_path), "t", "results.json"))
-    # every experiment is appended to a running index
     assert os.path.exists(os.path.join(str(tmp_path), "experiments.jsonl"))
+    # data.csv is RAW long format: rows of (persona, field=kept, value)
+    with open(os.path.join(str(tmp_path), "t", "data.csv")) as f:
+        rows = list(csv.DictReader(f))
+    assert rows[0]["field"] == "kept"            # raw field, not a computed metric
+    selfish = [r for r in rows if r["persona"] == "selfish"]
+    assert all(r["value"] == "20" for r in selfish)   # raw kept, not offer%
 
 
-def test_experiment_index_and_inspector(tmp_path):
+def test_experiment_index(tmp_path):
     from replicant.experiment import run_experiment
     from replicant import report
-    run_experiment("a", [("dictator", "", "baseline")], "m", reps=2, seed=1,
+    run_experiment("a", [("dictator", "", "baseline")], "m", n=2, reps=2,
                    runner=_fake_runner, out_dir=str(tmp_path))
-    run_experiment("b", [("dictator", "", "baseline")], "m", reps=2, seed=1,
+    run_experiment("b", [("dictator", "", "baseline")], "m", n=2, reps=2,
                    runner=_fake_runner, out_dir=str(tmp_path))
     runs = report.list_experiments(str(tmp_path))
     assert len(runs) == 2                       # index accumulates every run
     assert {r["experiment"] for r in runs} == {"a", "b"}
-    assert runs[0]["cells"][0]["summary"]["mean"] == 50.0
-
-
-def test_report_methods_sentence():
-    from replicant.experiment import run_cell
-    from replicant import report
-    cell = run_cell("dictator", "", "fake/model", reps=3, seed=42,
-                    runner=_fake_runner, persona_label="baseline")
-    sentence = report.methods_section(cell)
-    assert "dictator" in sentence and "human baseline 28.35%" in sentence
+    # index records WHAT ran, not results (no metric/baseline)
+    assert runs[0]["cells"][0]["game"] == "dictator"
+    assert "summary" not in runs[0]["cells"][0]
 
 
 def test_calibrate_mixture():
