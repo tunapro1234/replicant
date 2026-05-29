@@ -82,6 +82,7 @@ def run_experiment(name: str, cells_spec: list, model: str, reps: int = 5,
 
     Returns: {experiment, cells, cost_usd, [out_dir]}.
     """
+    import json
     from .providers import openrouter
     from . import results as results_mod
     from . import report
@@ -100,10 +101,24 @@ def run_experiment(name: str, cells_spec: list, model: str, reps: int = 5,
         exp_dir = os.path.join(out_dir, name)
         meta = results_mod.provenance(model, temperature, seed, cost_usd=cost,
                                       experiment=name, reps=reps)
+        # results.json holds EVERYTHING — full per-agent transcripts (every
+        # message seen + response, retries included), provenance, raw runs.
         results_mod.save(cells, meta, out_dir=exp_dir, run_id="results")
         report.export_csv(cells, os.path.join(exp_dir, "data.csv"))
         with open(os.path.join(exp_dir, "methods.txt"), "w") as f:
             f.write("\n".join(report.methods_section(c) for c in cells))
         out["out_dir"] = exp_dir
+
+        # Append a one-line summary to a running index of every experiment.
+        index = {
+            **meta,
+            "dir": exp_dir,
+            "cells": [{"game": c["game"], "persona": c["persona"],
+                       "metric": c["metric"], "summary": c["summary"],
+                       "baseline": c["baseline"]["value"]} for c in cells],
+        }
+        os.makedirs(out_dir, exist_ok=True)
+        with open(os.path.join(out_dir, "experiments.jsonl"), "a") as f:
+            f.write(json.dumps(index, default=str) + "\n")
 
     return out

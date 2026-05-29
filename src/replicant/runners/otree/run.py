@@ -48,7 +48,10 @@ def play(participant_url: str, persona: str, model: str, api_key: str = None,
                 messages.append({"role": "assistant", "content": "(noted)"})
             page = client.submit(page, {})
 
-    return {"system_prompt": system, "log": log}
+    # messages is the COMPLETE record: system prompt, every page the LLM saw,
+    # every response, plus retry attempts + error feedback (appended in
+    # _get_valid_answers). log is the parsed view; messages is ground truth.
+    return {"system_prompt": system, "log": log, "messages": messages}
 
 
 def run_batch(server_url: str, session_config: str, n: int,

@@ -100,6 +100,21 @@ def test_run_experiment_saves(tmp_path):
     assert os.path.exists(os.path.join(str(tmp_path), "t", "data.csv"))
     assert os.path.exists(os.path.join(str(tmp_path), "t", "methods.txt"))
     assert os.path.exists(os.path.join(str(tmp_path), "t", "results.json"))
+    # every experiment is appended to a running index
+    assert os.path.exists(os.path.join(str(tmp_path), "experiments.jsonl"))
+
+
+def test_experiment_index_and_inspector(tmp_path):
+    from replicant.experiment import run_experiment
+    from replicant import report
+    run_experiment("a", [("dictator", "", "baseline")], "m", reps=2, seed=1,
+                   runner=_fake_runner, out_dir=str(tmp_path))
+    run_experiment("b", [("dictator", "", "baseline")], "m", reps=2, seed=1,
+                   runner=_fake_runner, out_dir=str(tmp_path))
+    runs = report.list_experiments(str(tmp_path))
+    assert len(runs) == 2                       # index accumulates every run
+    assert {r["experiment"] for r in runs} == {"a", "b"}
+    assert runs[0]["cells"][0]["summary"]["mean"] == 50.0
 
 
 def test_report_methods_sentence():

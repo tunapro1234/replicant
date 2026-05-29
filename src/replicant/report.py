@@ -6,6 +6,35 @@ Operates on "cells" — the dicts returned by experiment.run_cell.
 """
 
 import csv
+import json
+import os
+
+
+def list_experiments(out_dir: str = "results") -> list[dict]:
+    """Read the running index of every experiment (results/experiments.jsonl)."""
+    path = os.path.join(out_dir, "experiments.jsonl")
+    if not os.path.exists(path):
+        return []
+    with open(path) as f:
+        return [json.loads(line) for line in f if line.strip()]
+
+
+def print_experiments(out_dir: str = "results") -> None:
+    """Print a compact history: every experiment run, mean vs baseline."""
+    runs = list_experiments(out_dir)
+    if not runs:
+        print(f"No experiments logged in {out_dir}/experiments.jsonl")
+        return
+    print(f"{'when':<21}{'experiment':<26}{'persona':<18}{'mean':<8}{'human':<7}{'n':<4}")
+    print("-" * 84)
+    for r in runs:
+        when = str(r.get("timestamp", ""))[:19]
+        for c in r.get("cells", []):
+            s = c.get("summary", {})
+            mean = s.get("mean")
+            mean_txt = f"{mean:.1f}" if isinstance(mean, (int, float)) else "—"
+            print(f"{when:<21}{r.get('experiment',''):<26}{c.get('persona',''):<18}"
+                  f"{mean_txt:<8}{str(c.get('baseline','')):<7}{s.get('n',''):<4}")
 
 
 def to_rows(cells: list[dict]) -> list[dict]:
