@@ -1,73 +1,38 @@
+import re
 from os import environ
+from pathlib import Path
 
 
-SESSION_CONFIGS = [
-    dict(
-        name='minimal',
-        display_name="Minimal — pick a number (teaching skeleton)",
-        app_sequence=['minimal'],
-        num_demo_participants=1,
-    ),
-    dict(
-        name='charness_rabin',
-        display_name="Charness & Rabin 2002 — Allocation Games",
-        app_sequence=['charness_rabin'],
-        num_demo_participants=1,
-    ),
-    dict(
-        name='kahneman_fairness',
-        display_name="Kahneman et al. 1986 — Price Fairness",
-        app_sequence=['kahneman_fairness'],
-        num_demo_participants=1,
-    ),
-    dict(
-        name='ertan2009',
-        display_name="Ertan et al. 2009 — Who to Punish?",
-        app_sequence=['ertan2009'],
-        num_demo_participants=1,
-    ),
-    dict(
-        name='ertan2009_v2',
-        display_name="Ertan 2009 v2 — Original Parameters",
-        app_sequence=['ertan2009_v2'],
-        num_demo_participants=1,
-    ),
-    dict(
-        name='public_goods',
-        display_name="Public Goods",
-        app_sequence=['public_goods_simple'],
-        num_demo_participants=3,
-    ),
-    dict(
-        name='dictator',
-        display_name="Dictator Game",
-        app_sequence=['dictator'],
-        num_demo_participants=2,
-    ),
-    dict(
-        name='prisoner',
-        display_name="Prisoner's Dilemma",
-        app_sequence=['prisoner'],
-        num_demo_participants=2,
-    ),
-    dict(
-        name='trust',
-        display_name="Trust Game",
-        app_sequence=['trust_simple'],
-        num_demo_participants=2,
-    ),
-    dict(
-        name='guess_two_thirds',
-        display_name="Guess 2/3 of the Average",
-        app_sequence=['guess_two_thirds', 'payment_info'],
-        num_demo_participants=3,
-    ),
-    dict(
-        name='survey',
-        app_sequence=['survey', 'payment_info'],
-        num_demo_participants=1,
-    ),
-]
+def _discover_session_configs():
+    """Auto-build one session config per oTree app folder.
+
+    An "app" is any subdirectory here with an __init__.py that defines
+    NAME_IN_URL. num_demo_participants is read from PLAYERS_PER_GROUP
+    (None or 1 -> 1). Drop a game folder in and restart — no manual edit.
+
+    (For multi-app sequences you'd still hand-write a config; single-app
+    games, which is all we run, are discovered automatically.)
+    """
+    base = Path(__file__).resolve().parent
+    configs = []
+    for app in sorted(p for p in base.iterdir() if p.is_dir()):
+        if app.name.startswith(("_", ".")):
+            continue
+        init = app / "__init__.py"
+        if not init.exists():
+            continue
+        src = init.read_text()
+        if "NAME_IN_URL" not in src:
+            continue
+        m = re.search(r"PLAYERS_PER_GROUP\s*=\s*(\w+)", src)
+        ppg = m.group(1) if m else "None"
+        n = int(ppg) if ppg.isdigit() else 1
+        configs.append(dict(name=app.name, app_sequence=[app.name],
+                            num_demo_participants=n))
+    return configs
+
+
+SESSION_CONFIGS = _discover_session_configs()
 
 # if you set a property in SESSION_CONFIG_DEFAULTS, it will be inherited by all configs
 # in SESSION_CONFIGS, except those that explicitly override it.

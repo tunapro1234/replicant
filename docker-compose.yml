@@ -1,6 +1,10 @@
 services:
   otree:
     build: otree_server
+    # Live-mount the apps instead of baking them in, so adding/removing a game
+    # is just a file change + `docker compose restart` — no image rebuild.
+    volumes:
+      - ./otree_server:/app
     ports:
       - "8000:8000"
     environment:
