@@ -32,3 +32,6 @@ otree_server/db.sqlite3
 
 # Claude working notes (not part of the repo)
 notes/
+
+# all dotenv files (secrets) — never commit
+.env*
