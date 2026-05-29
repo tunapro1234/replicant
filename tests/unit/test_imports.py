@@ -126,6 +126,19 @@ def test_report_methods_sentence():
     assert "dictator" in sentence and "human baseline 28.35%" in sentence
 
 
+def test_calibrate_mixture():
+    from replicant.calibrate import fit_weights, population
+    # Gemma case: selfish gives 0, fair gives 50; human mean 28.35.
+    w, sse = fit_weights({"selfish": 0, "fair": 50}, 28.35)
+    assert abs(w["fair"] - 0.57) < 0.02 and abs(w["selfish"] - 0.43) < 0.02
+    assert sse < 0.5
+    # weighted mean reproduces the target
+    assert abs(w["fair"] * 50 + w["selfish"] * 0 - 28.35) < 1.0
+    # population rounding sums to n
+    counts = population(w, 100)
+    assert sum(counts.values()) == 100
+
+
 def test_provenance_and_save(tmp_path):
     from replicant.results import provenance, save
     meta = provenance("m", temperature=1.0, seed=7, cost_usd=0.01, persona="x")
