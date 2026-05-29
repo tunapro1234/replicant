@@ -1,6 +1,6 @@
 services:
   otree:
-    build: tests/otree_server
+    build: otree_server
     ports:
       - "8000:8000"
     environment:

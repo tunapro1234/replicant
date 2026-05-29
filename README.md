@@ -72,6 +72,23 @@ export OPEN_ROUTER_API_KEY=sk-or-...
 python tests/run_experiment.py --reps 5
 ```
 
+### Entry scripts (`scripts/`)
+
+```bash
+# Pick a game interactively; it auto-sizes the agent count and runs full-LLM.
+# Self-contained — starts the local oTree server if it isn't already up.
+python scripts/run_game.py
+python scripts/run_game.py --game dictator        # skip the menu
+
+# Connect one agent to ANY oTree participant URL (server can be anywhere).
+python scripts/connect_agent.py <participant_url>
+python scripts/connect_agent.py <url> --persona "You only care about your own pay-off"
+```
+
+The bundled oTree apps live in `otree_server/` (top level). Adding or editing a
+game requires a rebuild — `docker compose up -d --build` — because the apps are
+copied into the image.
+
 This writes `results/dictator_demo/`:
 
 - **`results.json`** — full provenance (git commit, model, temp, seed, version,
