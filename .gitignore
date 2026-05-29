@@ -29,3 +29,6 @@ results/
 # oTree runtime database (regenerated; never commit)
 otree_server/db.sqlite3
 *.sqlite3
+
+# Claude working notes (not part of the repo)
+notes/

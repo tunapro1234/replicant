@@ -139,8 +139,7 @@ result = play(participant_url, persona="", model="google/gemma-4-31b-it")
 ## Design
 
 This is research software — built around reproducibility, provenance, raw-data
-preservation, N-not-n=1 statistics, cited baselines, and tidy export. The
-guiding principles are in [DESIGN.md](DESIGN.md).
+preservation, N-not-n=1 statistics, cited baselines, and tidy export.
 
 ## Notes
 

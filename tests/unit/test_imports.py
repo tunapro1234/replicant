@@ -127,7 +127,9 @@ def test_report_methods_sentence():
 
 
 def test_calibrate_mixture():
-    from replicant.calibrate import fit_weights, population
+    from replicant.personas.economics.homo_silicus_2301_07543.calibrate import (
+        fit_weights, population,
+    )
     # Gemma case: selfish gives 0, fair gives 50; human mean 28.35.
     w, sse = fit_weights({"selfish": 0, "fair": 50}, 28.35)
     assert abs(w["fair"] - 0.57) < 0.02 and abs(w["selfish"] - 0.43) < 0.02
