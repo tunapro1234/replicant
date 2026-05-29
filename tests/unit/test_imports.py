@@ -117,6 +117,23 @@ def test_experiment_index(tmp_path):
     assert "summary" not in runs[0]["cells"][0]
 
 
+def test_persona_methods_catalog():
+    from replicant.personas import methods
+    assert set(methods.METHODS) >= {"baseline", "homo_silicus", "personallm"}
+    # baseline -> empty persona
+    assert methods.build("baseline") == ("", "baseline")
+    # homo_silicus -> theory string
+    s, label = methods.build("homo_silicus", persona="self_interested")
+    assert s == "You only care about your own pay-off" and label == "self_interested"
+    # personallm -> big5 adjective string
+    s, label = methods.build("personallm", E=4, A=1, C=3, N=4, O=3)
+    assert s.startswith("You are a character who is") and label.startswith("big5_")
+    # unknown method errors
+    import pytest
+    with pytest.raises(ValueError):
+        methods.build("nope")
+
+
 def test_calibrate_mixture():
     from replicant.personas.economics.homo_silicus_2301_07543.calibrate import (
         fit_weights, population,

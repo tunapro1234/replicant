@@ -101,10 +101,25 @@ and check the calibrated weights stay in Horton's regime.
 **Conclusion:** Horton's persona-conditioning + mixture-calibration result is
 robust to (a) running through oTree and (b) using Gemma. We can build on it.
 
+## Phase 4 — selectable persona-injection method
+
+`src/replicant/personas/methods.py` is a small catalog of injection *methods*;
+the runner picks one with `--method`:
+
+```bash
+python scripts/run_game.py --game dictator --method homo_silicus --persona self_interested
+python scripts/run_game.py --game dictator --method personallm --big5 "E=2,A=1,C=3,N=4,O=3"
+python scripts/run_game.py --game dictator --method baseline
+```
+
+Methods so far: `baseline`, `homo_silicus` (theory/political one-liners),
+`personallm` (binary Big Five). Adding a method = add one builder to that file.
+
 ## Status
 
 - [x] Phase 1 — replicate (KKT + Charness-Rabin), no oTree, results match paper.
 - [x] Phase 2 — add oTree, then swap model to Gemma; weights stay in Horton's regime.
-- [ ] Phase 4 — selectable persona-injection method.
+- [x] Phase 3 — this report.
+- [x] Phase 4 — selectable persona-injection method (`--method`).
 
 Cost so far: ~$0.06 (GPT-4o for replication, Gemma for the model-swap step).

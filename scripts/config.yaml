@@ -8,12 +8,18 @@ reps: 10                          # repetitions; >1 gives mean +/- 95% CI and sa
 seed: 42                          # base seed (rep i uses seed+i) for reproducibility
 temperature: 1.0                  # LLM sampling temperature
 
-# persona: either a name...
-persona: self_interested          # baseline | self_interested | inequity_averse |
-                                  # efficient | socialist | conservative | ...
+# persona-injection method: baseline | homo_silicus | personallm
+method: homo_silicus
 
-# ...or a sampled Big Five individual (comment out the line above, use this):
+# for method=homo_silicus — which theory/political persona:
+persona: self_interested          # self_interested | inequity_averse | efficient |
+                                  # socialist | leftist | liberal | moderate |
+                                  # libertarian | conservative
+
+# for method=personallm — Big Five scores (uncomment, 1-5):
+# big5: "E=4,A=1,C=3,N=4,O=3"
+
+# or a sampled Big Five individual from population norms:
 # persona:
 #   type: big5
-#   sampling: norms               # draw {E,A,C,N,O} from population norms
 #   seed: 42
