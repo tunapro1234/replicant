@@ -3,6 +3,12 @@ from os import environ
 
 SESSION_CONFIGS = [
     dict(
+        name='minimal',
+        display_name="Minimal — pick a number (teaching skeleton)",
+        app_sequence=['minimal'],
+        num_demo_participants=1,
+    ),
+    dict(
         name='charness_rabin',
         display_name="Charness & Rabin 2002 — Allocation Games",
         app_sequence=['charness_rabin'],
