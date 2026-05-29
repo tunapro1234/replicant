@@ -1,0 +1,19 @@
+# Example experiment config for scripts/run_game.py
+#   python scripts/run_game.py --config config.yaml
+# Any CLI flag (e.g. --reps 20) overrides the matching value here.
+
+game: dictator                    # which game (must be a registered oTree app)
+model: google/gemma-4-31b-it      # any OpenRouter model id
+reps: 10                          # repetitions; >1 gives mean +/- 95% CI and saves results
+seed: 42                          # base seed (rep i uses seed+i) for reproducibility
+temperature: 1.0                  # LLM sampling temperature
+
+# persona: either a name...
+persona: self_interested          # baseline | self_interested | inequity_averse |
+                                  # efficient | socialist | conservative | ...
+
+# ...or a sampled Big Five individual (comment out the line above, use this):
+# persona:
+#   type: big5
+#   sampling: norms               # draw {E,A,C,N,O} from population norms
+#   seed: 42
