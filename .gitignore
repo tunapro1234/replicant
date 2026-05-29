@@ -25,3 +25,7 @@ tests/sweep_cache/
 
 # Generated experiment outputs
 results/
+
+# oTree runtime database (regenerated; never commit)
+otree_server/db.sqlite3
+*.sqlite3
