@@ -80,10 +80,31 @@ Claude-3.5 / Deepseek; same ballpark as GPT-4o / Llama). In-sample fit RMSE 0.20
 *overdetermined*, so it cannot memorize the data (the anti-overfitting property
 the multi-game design buys you, unlike a single game).
 
+## Phase 2 — change one variable at a time
+
+Starting from the working Charness-Rabin replication, change exactly one thing
+and check the calibrated weights stay in Horton's regime.
+(`charness_rabin_otree.py`.)
+
+| step | change | efficient | inequity | self | RMSE |
+|---|---|---|---|---|---|
+| Phase 1 | none (direct prompts, GPT-4o) | 44% | 0% | 56% | 0.20 |
+| Phase 2a | **+ oTree** (GPT-4o) | 36% | 10% | 54% | 0.19 |
+| Phase 2b | **+ oTree, model = Gemma** | 44% | 0% | 56% | 0.20 |
+
+- **2a (add oTree):** weights stayed in regime; the page framing nudged
+  `inequity_averse` on 2 scenarios, shifting 10% onto inequity — landing on
+  Horton's *own* GPT-4o weights (37/10/53). oTree validated as transport.
+- **2b (swap model to Gemma):** weights 44/0/56 — identical to Horton's
+  Claude-3.5/Deepseek. The calibration replicates on our target model.
+
+**Conclusion:** Horton's persona-conditioning + mixture-calibration result is
+robust to (a) running through oTree and (b) using Gemma. We can build on it.
+
 ## Status
 
 - [x] Phase 1 — replicate (KKT + Charness-Rabin), no oTree, results match paper.
-- [ ] Phase 2 — change one variable at a time (add oTree; then swap model).
+- [x] Phase 2 — add oTree, then swap model to Gemma; weights stay in Horton's regime.
 - [ ] Phase 4 — selectable persona-injection method.
 
-Cost so far: ~$0.04 (GPT-4o, temperature 0).
+Cost so far: ~$0.06 (GPT-4o for replication, Gemma for the model-swap step).

@@ -1,0 +1,16 @@
+{{ block title }}
+    Allocation {{ round }} of {{ total }}
+{{ endblock }}
+
+{{ block content }}
+<p>You are deciding on an allocation for yourself and another person, Person A.</p>
+
+<table class="table" style="max-width:420px">
+    <tr><th></th><th>You get</th><th>Person A gets</th></tr>
+    <tr><td><b>Left</b></td><td>${{ s.left_b }}</td><td>${{ s.left_a }}</td></tr>
+    <tr><td><b>Right</b></td><td>${{ s.right_b }}</td><td>${{ s.right_a }}</td></tr>
+</table>
+
+{{ formfields }}
+{{ next_button }}
+{{ endblock }}
