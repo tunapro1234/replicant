@@ -23,6 +23,9 @@ from replicant.personas.big5 import personallm
 from replicant.personas.economics.homo_silicus_2301_07543 import ALLOCATION_PERSONAS
 from replicant.experiment import run_experiment
 from replicant.report import summary_table
+from replicant.env import load_dotenv
+
+load_dotenv()  # pick up OPEN_ROUTER_API_KEY from .env if not already exported
 
 
 def main():

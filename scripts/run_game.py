@@ -23,6 +23,9 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from replicant import run_batch
 from replicant.games import GAMES
+from replicant.env import load_dotenv
+
+load_dotenv()  # pick up OPEN_ROUTER_API_KEY from .env if not already exported
 
 SERVER = "http://localhost:8000"
 REST_KEY = "test-rest-key"

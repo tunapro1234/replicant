@@ -19,6 +19,9 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
 
 from replicant import play
+from replicant.env import load_dotenv
+
+load_dotenv()  # pick up OPEN_ROUTER_API_KEY from .env if not already exported
 
 
 def main():
